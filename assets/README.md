@@ -1,18 +1,56 @@
-SeFlow Assets
+OpenSceneFlow Assets
 ---
 
 There are two ways to setup the environment: conda in your desktop and docker container isolate environment.
 
-## Docker
+## Docker Environment
 
-Docker installation check [DeFlow Assets](https://github.com/KTH-RPL/DeFlow/blob/main/assets/README.md#docker-environment). Then you can build and run the container by:
+### Build Docker Image
+If you want to build docker with compile all things inside, there are some things need setup first in your own desktop environment: 
+- [NVIDIA-driver](https://www.nvidia.com/download/index.aspx): which I believe most of people may already have it. Try `nvidia-smi` to check if you have it.
+- [Docker](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository):
+   ```bash
+   # Add Docker's official GPG key:
+   sudo apt-get update
+   sudo apt-get install ca-certificates curl
+   sudo install -m 0755 -d /etc/apt/keyrings
+   sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+   sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-```bash
-cd SeFlow
-docker build -t zhangkin/seflow .
+   # Add the repository to Apt sources:
+   echo \
+   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+   $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+   sudo apt-get update
+   ```
+- [nvidia-container-toolkit](https://github.com/NVIDIA/nvidia-container-toolkit)
+   ```bash
+   sudo apt update && apt install nvidia-container-toolkit
+   ```
 
-docker run -it --gpus all -v /dev/shm:/dev/shm -v /home/kin/data:/home/kin/data --name seflow zhangkin/seflow /bin/zsh
-```
+Then follow [this stackoverflow answers](https://stackoverflow.com/questions/59691207/docker-build-with-nvidia-runtime):
+1. Edit/create the /etc/docker/daemon.json with content:
+   ```bash
+   {
+      "runtimes": {
+         "nvidia": {
+               "path": "/usr/bin/nvidia-container-runtime",
+               "runtimeArgs": []
+            } 
+      },
+      "default-runtime": "nvidia" 
+   }
+   ```
+2. Restart docker daemon:
+   ```bash
+   sudo systemctl restart docker
+   ```
+
+3. Then you can build the docker image:
+   ```bash
+   cd OpenSceneFlow && docker build -t zhangkin/OpenSceneFlow .
+   ```
    
 ## Installation
 
@@ -30,13 +68,13 @@ bash Miniforge3-$(uname)-$(uname -m).sh
 Create base env: [~5 mins]
 
 ```bash
-git clone https://github.com/KTH-RPL/SeFlow.git
+git clone https://github.com/KTH-RPL/OpenSceneFlow.git
 mamba env create -f assets/environment.yml
 ```
 
 CUDA package (nvcc compiler already installed through conda), the compile time is around 1-5 minutes:
 ```bash
-mamba activate seflow
+mamba activate opensf
 cd assets/cuda/mmcv && python ./setup.py install && cd ../../..
 cd assets/cuda/chamfer3D && python ./setup.py install && cd ../../..
 ```
@@ -44,7 +82,7 @@ cd assets/cuda/chamfer3D && python ./setup.py install && cd ../../..
 
 Checking important packages in our environment now:
 ```bash
-mamba activate seflow
+mamba activate opensf
 python -c "import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.version.cuda)"
 python -c "import lightning.pytorch as pl; print(pl.__version__)"
 python -c "from assets.cuda.mmcv import Voxelization, DynamicScatter;print('successfully import on our lite mmcv package')"

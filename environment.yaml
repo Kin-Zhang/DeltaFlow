@@ -1,4 +1,4 @@
-name: seflow
+name: opensf
 channels:
   - conda-forge
   - pytorch

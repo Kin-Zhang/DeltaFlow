@@ -114,7 +114,7 @@ This directory contains the scripts to preprocess the datasets.
 - `extract_nus.py`: Process the datasets in nuScenes.
 - `extract_waymo.py`: Process the datasets in Waymo.
 
-Example Running command:`
+Example Running command:
 ```bash
 # av2:
 python dataprocess/extract_av2.py --av2_type sensor --data_mode train --argo_dir /home/kin/data/av2 --output_dir /home/kin/data/av2/preprocess
@@ -150,4 +150,13 @@ Or you can run testing file to visualize the data.
 python tools/visualization.py --data_dir /home/kin/data/av2/preprocess/sensor/mini --res_name flow
 
 python tools/visualization.py --data_dir /home/kin/data/waymo/preprocess/val --res_name flow
+```
+
+### Self-Supervised Process
+
+Process train data for self-supervised learning. Only training data needs this step. 
+[Runtime: Normally need 15 hours for my desktop, 3 hours for the cluster with five available nodes parallel running.]
+
+```bash
+python process.py --data_dir /home/kin/data/av2/preprocess_v2/sensor/train --scene_range 0,701
 ```
