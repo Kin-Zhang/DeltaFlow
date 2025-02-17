@@ -10,8 +10,13 @@
     <!-- /pypi-strip -->
 </p>
 
-OpenSceneFlow is an codebase for point cloud scene flow in large scale point cloud. 
-It is also an official implementation of the following paper:
+OpenSceneFlow is a codebase for point cloud scene flow estimation. 
+It is also an official implementation of the following paper (sored by the time of publication):
+
+- **SSF: Sparse Long-Range Scene Flow for Autonomous Driving**  
+*Ajinkya Khoche, Qingwen Zhang, Laura Pereira Sánchez, Aron Asefaw, Sina Sharif Mansouri and Patric Jensfelt*  
+International Conference on Robotics and Automation (**ICRA**) 2025  
+[ Backbone ] [ Supervised ] - [ [arXiv](https://arxiv.org/abs/2501.17821) ] [ [Project](https://github.com/KTH-RPL/SSF) ] &rarr; [here](#ssf)
 
 - **SeFlow: A Self-Supervised Scene Flow Method in Autonomous Driving**  
 *Qingwen Zhang, Yi Yang, Peizheng Li, Olov Andersson, Patric Jensfelt*  
@@ -24,8 +29,11 @@ International Conference on Robotics and Automation (**ICRA**) 2024
 [ Backbone ] [ Supervised ] - [ [arXiv](https://arxiv.org/abs/2401.16122) ] [ [Project](https://github.com/KTH-RPL/DeFlow) ] &rarr; [here](#deflow)
 
 
-<details> <summary>🎁 <b>One repository, All methods!</b> OpenSceneFlow integrates the following excellent works </summary>
 
+<details> <summary>🎁 <b>One repository, All methods!</b> </summary>
+
+- [x] [FastFlow3d](https://arxiv.org/abs/2103.01306): RA-L 2021
+- [x] [ZeroFlow](https://arxiv.org/abs/2305.10424): ICLR 2024, their pre-trained weight can covert into our format easily through [the script](tools/zerof2ours.py).
 - [ ] [NSFP](https://arxiv.org/abs/2111.01253): NeurIPS 2021, faster 3x than original version because of [our CUDA speed up](assets/cuda/README.md), same (slightly better) performance. Done coding, public after review.
 - [ ] [FastNSF](https://arxiv.org/abs/2304.09121): ICCV 2023. Done coding, public after review.
 - [ ] [Flow4D](https://arxiv.org/abs/2407.07995): Under Review. Done coding, public after review.
@@ -61,10 +69,11 @@ If you find *OpenSceneFlow* useful to your research, please cite our work as enc
 
 📜 Changelog:
 
+- 🎁 2025/1/28 14:58: Update the codebase to collect all methods in one repository reference [Pointcept](https://github.com/Pointcept/Pointcept) repo.
 - 🤗 2024/11/18 16:17: Update model and demo data download link through HuggingFace, Personally I found `wget` from HuggingFace link is much faster than Zenodo.
 - 2024/09/26 16:24: All codes already uploaded and tested. You can to try training directly by downloading (through [HuggingFace](https://huggingface.co/kin-zhang/OpenSceneFlow)/[Zenodo](https://zenodo.org/records/13744999)) demo data or pretrained weight for evaluation. 
 - 2024/07/24: Merging SeFlow & DeFlow code together, lighter setup and easier running.
-
+- 🔥 2024/07/02: Check the self-supervised version in our new ECCV'24 [SeFlow](https://github.com/KTH-RPL/SeFlow). The 1st ranking in new leaderboard among self-supervise methods.
 
 ## 0. Installation
 
@@ -156,7 +165,7 @@ Check all detailed result files (presented in our paper Table 1) in [this discus
 
 ## 4. Visualization
 
-We provide a script to visualize the results of the model also. You can specify the checkpoint path and the data path to visualize the results. The step is quickly similar to evaluation.
+We provide a script to visualize the results of the model also. You can specify the checkpoint path and the data path to visualize the results. The step is quite similar to evaluation.
 
 ```bash
 python save.py checkpoint=/home/kin/seflow_best.ckpt dataset_path=/home/kin/data/av2/preprocess_v2/sensor/vis
