@@ -10,6 +10,7 @@ dependencies:
   - nvidia/label/cuda-11.7.0::cuda
   - lightning==2.0.1
   - mkl==2024.0.0
+  - tensorboard
   - numba
   - numpy
   - pandas
