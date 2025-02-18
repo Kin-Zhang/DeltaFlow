@@ -123,6 +123,15 @@ python dataprocess/extract_av2.py --av2_type sensor --data_mode train --argo_dir
 python dataprocess/extract_waymo.py --mode train --flow_data_dir /home/kin/data/waymo/flowlabel --map_dir /home/kin/data/waymo/flowlabel/map --output_dir /home/kin/data/waymo/preprocess  --nproc 48
 ```
 
+
+Extract all Argoverse 2.0 data to unified `.h5` format.
+[Runtime: Normally need 45 mins finished run following commands totally in setup mentioned in our paper]
+```bash
+python dataprocess/extract_av2.py --av2_type sensor --data_mode train --argo_dir /home/kin/data/av2 --output_dir /home/kin/data/av2/preprocess_v2
+python dataprocess/extract_av2.py --av2_type sensor --data_mode val --mask_dir /home/kin/data/av2/3d_scene_flow
+python dataprocess/extract_av2.py --av2_type sensor --data_mode test --mask_dir /home/kin/data/av2/3d_scene_flow
+```
+
 All these preprocess scripts will generate the same format `.h5` file. The file contains the following in codes:
 
 File: `[*:logid].h5` file named in logid. Every timestamp is the key of group (f[key]).

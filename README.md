@@ -13,6 +13,11 @@
 OpenSceneFlow is a codebase for point cloud scene flow estimation. 
 It is also an official implementation of the following paper (sored by the time of publication):
 
+<!-- - **Flow4D: Leveraging 4D Voxel Network for LiDAR Scene Flow Estimation**  
+*Jaeyeul Kim, Jungwan Woo, Ukcheol Shin, Jean Oh, Sunghoon Im*  
+IEEE Robotics and Automation Letters (**RA-L**) 2025  
+[ Backbone ] [ Supervised ] - [ [arXiv](https://arxiv.org/abs/2407.07995) ] [ [Project](https://github.com/dgist-cvlab/Flow4D) ] &rarr; [here](#flow4d) -->
+
 - **SSF: Sparse Long-Range Scene Flow for Autonomous Driving**  
 *Ajinkya Khoche, Qingwen Zhang, Laura Pereira Sánchez, Aron Asefaw, Sina Sharif Mansouri and Patric Jensfelt*  
 International Conference on Robotics and Automation (**ICRA**) 2025  
@@ -105,11 +110,11 @@ docker run -it --gpus all -v /dev/shm:/dev/shm -v /home/kin/data:/home/kin/data 
 
 ## 1. Data Preparation
 
-Check [dataprocess/README.md](dataprocess/README.md#argoverse-20) for downloading tips for the raw Argoverse 2 dataset. 
-Or maybe you want to have the **mini processed dataset** to try the code quickly, We directly provide one scene inside `train` and `val`. 
+Check [dataprocess/README.md](dataprocess/README.md#argoverse-20) for downloading tips for the raw Argoverse 2 dataset and [data preprocessed to h5 files commands](dataprocess/README.md#process).
+Another good way to try code quickly is using **mini processed dataset**, we directly provide one scene inside `train` and `val`. 
 It already converted to `.h5` format and processed with the label data. 
 You can download it from [Zenodo](https://zenodo.org/records/13744999/files/demo_data.zip)/[HuggingFace](https://huggingface.co/kin-zhang/OpenSceneFlow/blob/main/demo_data.zip) and extract it to the data folder. 
-Then you can directly use demo data to run the [training script](#2-quick-start).
+Then you can directly use this mini processed demo data to run the [training script](#2-quick-start).
 
 ```bash
 wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/demo_data.zip
@@ -117,6 +122,10 @@ unzip demo_data.zip -p /home/kin/data/av2
 ```
 
 ## 2. Quick Start
+
+<!-- ### Flow4D -->
+
+<!-- ### SSF -->
 
 ### SeFlow
 
@@ -159,9 +168,22 @@ python eval.py checkpoint=/home/kin/seflow_best.ckpt av2_mode=test leaderboard_v
 python eval.py checkpoint=/home/kin/seflow_best.ckpt av2_mode=test leaderboard_version=2
 ```
 
-<!-- And the terminal will output the command for you to submit the result to the online leaderboard. You can follow [this section for evalai](https://github.com/KTH-RPL/DeFlow?tab=readme-ov-file#2-evaluation).
+To submit to the Online Leaderboard, if you select `av2_mode=test`, it should be a zip file for you to submit to the leaderboard.
+Note: The leaderboard result in DeFlow&SeFlow main paper is [version 1](https://eval.ai/web/challenges/challenge-page/2010/evaluation), as [version 2](https://eval.ai/web/challenges/challenge-page/2210/overview) is updated after DeFlow&SeFlow.
 
-Check all detailed result files (presented in our paper Table 1) in [this discussion](https://github.com/KTH-RPL/DeFlow/discussions/2). -->
+```bash
+# since the env may conflict we set new on deflow, we directly create new one:
+mamba create -n py37 python=3.7
+mamba activate py37
+pip install "evalai"
+
+# Step 2: login in eval and register your team
+evalai set-token <your token>
+
+# Step 3: Copy the command pop above and submit to leaderboard
+evalai challenge 2010 phase 4018 submit --file av2_submit.zip --large --private
+evalai challenge 2210 phase 4396 submit --file av2_submit_v2.zip --large --private
+```
 
 ## 4. Visualization
 
