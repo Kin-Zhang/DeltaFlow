@@ -1,8 +1,12 @@
 <p align="center">
+    <a href="https://github.com/KTH-RPL/OpenSceneFlow">
     <picture>
     <img alt="opensceneflow" src="assets/docs/logo.png" width="600">
     </picture><br>
+    </a>
 </p>
+
+💞 If you find [*OpenSceneFlow*](https://github.com/KTH-RPL/OpenSceneFlow) useful to your research, please cite [**our works** 📖](#cite-us) and [give a star 🌟](https://github.com/KTH-RPL/OpenSceneFlow) as encouragement. (੭ˊ꒳​ˋ)੭✧
 
 OpenSceneFlow is a codebase for point cloud scene flow estimation. 
 It is also an official implementation of the following papers (sored by the time of publication):
@@ -27,10 +31,7 @@ European Conference on Computer Vision (**ECCV**) 2024
 International Conference on Robotics and Automation (**ICRA**) 2024  
 [ Backbone ] [ Supervised ] - [ [arXiv](https://arxiv.org/abs/2401.16122) ] [ [Project](https://github.com/KTH-RPL/DeFlow) ] &rarr; [here](#deflow)
 
-
-💞 If you find *OpenSceneFlow* useful to your research, please cite [**our works** 📖](#cite-us) and give a star 🌟 as encouragement. (੭ˊ꒳​ˋ)੭✧
-
-🎁 <b>One repository, All methods!</b>
+🎁 <b>One repository, All methods!</b> 
 Additionally, *OpenSceneFlow* integrates following excellent works: [ICLR'24 ZeroFlow](https://arxiv.org/abs/2305.10424), [ICCV'23 FastNSF](https://arxiv.org/abs/2304.09121), [RA-L'21 FastFlow](https://arxiv.org/abs/2103.01306), [NeurIPS'21 NSFP](https://arxiv.org/abs/2111.01253). (More on the way...)
 
 <details> <summary> Summary of them:</summary>
@@ -43,7 +44,7 @@ Additionally, *OpenSceneFlow* integrates following excellent works: [ICLR'24 Zer
 
 </details>
 
-💡: Want to learn how to add your own network in this structure? Check [Contribute section](assets/README.md#contribute) and know more about the code. Fee free to pull request and your bibtex [here](#cite-us) by pull request.
+💡: Want to learn how to add your own network in this structure? Check [Contribute section](assets/README.md#contribute) and know more about the code. Fee free to pull request and your bibtex [here](#cite-us).
 
 ---
 
@@ -102,7 +103,7 @@ Refer to [dataprocess/README.md](dataprocess/README.md) for dataset download ins
 
 After downloading, convert the raw data to `.h5` format for easy training, evaluation, and visualization. Follow the steps in [dataprocess/README.md#process](dataprocess/README.md#process). 
 
-For a quick start, use our **mini processed dataset**, which includes one scene in `train` and `val`. It is pre-converted to `.h5` format with label data ([Zenodo](https://zenodo.org/records/13744999/files/demo_data.zip)/[HuggingFace](https://huggingface.co/kin-zhang/OpenSceneFlow/blob/main/demo_data.zip)).
+For a quick start, use our **mini processed dataset**, which includes one scene in `train` and `val`. It is pre-converted to `.h5` format with label data ([HuggingFace](https://huggingface.co/kin-zhang/OpenSceneFlow/blob/main/demo_data.zip)/[Zenodo](https://zenodo.org/records/13744999/files/demo_data.zip)).
 
 
 ```bash
@@ -114,7 +115,9 @@ Once extracted, you can directly use this dataset to run the [training script](#
 
 ## 2. Quick Start
 
-Don't forget to active Python environment before running the code.
+Don't forget to active Python environment before running the code. 
+If you want to use [wandb](wandb.ai), replace all `entity="kth-rpl",` to your own entity otherwise tensorboard will be used locally.
+And free yourself from trainning, you can download the pretrained weight from [HuggingFace](https://huggingface.co/kin-zhang/OpenSceneFlow) and we provided the detail `wget` command in each model section.
 
 ```bash
 mamba activate opensf
@@ -133,7 +136,28 @@ Pretrained weight can be downloaded through:
 wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/flow4d_best.ckpt
 ```
 
-<!-- ### SSF -->
+### SSF
+
+Extra pakcges needed for SSF model:
+```bash
+pip install mmengine-lite torch-scatter
+```
+
+Train SSF with the leaderboard submit config. [Runtime: Around 6 hours in 8x A100 GPUs.]
+
+```bash
+python train.py model=ssf lr=8e-3 epochs=25 batch_size=64 loss_fn=deflowLoss "voxel_size=[0.2, 0.2, 6]" "point_cloud_range=[-51.2, -51.2, -3, 51.2, 51.2, 3]"
+```
+
+Pretrained weight can be downloaded through:
+```bash
+# the leaderboard weight
+wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/ssf_best.ckpt
+
+# the long-range weight:
+wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/ssf_long.ckpt
+```
+
 
 ### SeFlow
 
@@ -223,7 +247,8 @@ https://github.com/user-attachments/assets/07e8d430-a867-42b7-900a-11755949de21
 
 ## Cite Us
 
-*OpenSceneFlow* is designed by [Qingwen Zhang](https://kin-zhang.github.io/) from DeFlow and SeFlow project. If you find it useful, please cite our works:
+[*OpenSceneFlow*](https://github.com/KTH-RPL/OpenSceneFlow) is originally designed by [Qingwen Zhang](https://kin-zhang.github.io/) from DeFlow and SeFlow. 
+If you find it useful, please cite our works:
 
 ```bibtex
 @inproceedings{zhang2024seflow,
@@ -251,7 +276,7 @@ https://github.com/user-attachments/assets/07e8d430-a867-42b7-900a-11755949de21
 }
 ```
 
-And our excellent collaborators works as followings:
+And our excellent collaborators works contributed to this codebase also:
 
 ```bibtex
 @article{kim2025flow4d,
@@ -272,6 +297,7 @@ And our excellent collaborators works as followings:
 }
 ```
 
+Thank you for your support! ❤️
 Feel free to contribute your method and add your bibtex here by pull request!
 
-❤️: [BucketedSceneFlowEval](https://github.com/kylevedder/BucketedSceneFlowEval); [Pointcept](https://github.com/Pointcept/Pointcept); [ZeroFlow](https://github.com/kylevedder/zeroflow) ...
+❤️: [BucketedSceneFlowEval](https://github.com/kylevedder/BucketedSceneFlowEval); [Pointcept](https://github.com/Pointcept/Pointcept); [OpenPCSeg](https://github.com/BAI-Yeqi/OpenPCSeg); [ZeroFlow](https://github.com/kylevedder/zeroflow) ...

@@ -6,6 +6,7 @@ from typing import List, Tuple
 from assets.cuda.mmcv import Voxelization
 from assets.cuda.mmcv import DynamicScatter
 
+
 def get_paddings_indicator(actual_num, max_num, axis=0):
     """Create boolean mask by actually number of a padded tensor.
     Args:
@@ -519,7 +520,49 @@ class DynamicVoxelizer(nn.Module):
         # Offsets are computed relative to min point
         voxel_centers = voxel_coords * voxel_size + min_point + voxel_size / 2
 
-        return points - voxel_centers
+        return points[:,:3] - voxel_centers
+
+    def _concatenate_batch_results(self, voxel_info_list):
+        voxel_info_dict = dict()
+        # concatenate keys of voxel_info_list for all batches
+        for k in voxel_info_list[0].keys():
+            if k != 'voxel_coords':
+                voxel_info_dict[k] = torch.cat([item[k] for item in voxel_info_list], dim=0)
+            else:
+                coors_batch = []
+                for i in range(len(voxel_info_list)):
+                    coor_pad = nn.functional.pad(voxel_info_list[i][k], (1, 0), mode='constant', value=i)
+                    coors_batch.append(coor_pad)
+                voxel_info_dict[k] = torch.cat(coors_batch, dim=0).long()
+        return voxel_info_dict
+
+    def _split_batch_results(self, batch_voxel_info_dict):
+        voxel_info_list = []
+
+        bsz = len(batch_voxel_info_dict['voxel_coords'][:,0].unique())
+        for i in range(bsz):
+            voxel_info_dict = dict()
+            batch_mask = batch_voxel_info_dict['voxel_coords'][:,0] == i
+            for k in batch_voxel_info_dict.keys():
+                voxel_info_dict[k] = batch_voxel_info_dict[k][batch_mask]
+            voxel_info_list.append(voxel_info_dict)
+        return voxel_info_list
+
+    def _split_results(self, voxel_info_dict):
+        full_voxel_info_list = []
+
+        for j in range(len(voxel_info_dict['indicator'].unique())):
+            indicator_mask = voxel_info_dict['indicator'] == j
+            bsz = len(voxel_info_dict['voxel_coords'][indicator_mask,0].unique())
+            voxel_info_list = []
+            for i in range(bsz):
+                info_dict = dict()
+                batch_mask = voxel_info_dict['voxel_coords'][indicator_mask,0] == i
+                for k in voxel_info_dict.keys():
+                    info_dict[k] = voxel_info_dict[k][indicator_mask][batch_mask]
+                voxel_info_list.append(info_dict)
+            full_voxel_info_list.append(voxel_info_list)
+        return full_voxel_info_list
 
     def forward(
             self,
