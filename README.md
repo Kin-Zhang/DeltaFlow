@@ -62,20 +62,14 @@ There are two ways to install the codebase: directly on your [local machine](#en
 
 ### Environment Setup
 
+We use conda to manage the environment, you can install it follow [here](assets/README.md#system). Then create the base environment with the following command [5~15 minutes]:
+
 ```bash
 git clone --recursive https://github.com/KTH-RPL/OpenSceneFlow.git
 cd OpenSceneFlow && mamba env create -f environment.yaml
 
 # You may need export your LD_LIBRARY_PATH with env lib
 # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/kin/mambaforge/lib
-```
-
-CUDA package (we already install nvcc compiler inside conda env), the compile time is around 1-5 minutes:
-```bash
-mamba activate opensf
-# CUDA already install in python environment. I also tested others version like 11.3, 11.4, 11.7, 11.8 all works
-cd assets/cuda/mmcv && python ./setup.py install && cd ../../..
-cd assets/cuda/chamfer3D && python ./setup.py install && cd ../../..
 ```
 
 ### Docker (Recommended for Isolation)
@@ -115,8 +109,11 @@ Once extracted, you can directly use this dataset to run the [training script](#
 
 ## 2. Quick Start
 
-Don't forget to active Python environment before running the code. 
-If you want to use [wandb](wandb.ai), replace all `entity="kth-rpl",` to your own entity otherwise tensorboard will be used locally.
+Some tips before running the code:
+* Don't forget to active Python environment before running the code. 
+* If you want to use [wandb](wandb.ai), replace all `entity="kth-rpl",` to your own entity otherwise tensorboard will be used locally.
+* Set correct data path by passing the config, e.g. `train_data=/home/kin/data/av2/h5py/demo/train val_data=/home/kin/data/av2/h5py/demo/val`.
+
 And free yourself from trainning, you can download the pretrained weight from [HuggingFace](https://huggingface.co/kin-zhang/OpenSceneFlow) and we provided the detail `wget` command in each model section.
 
 ```bash
