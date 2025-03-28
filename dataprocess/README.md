@@ -30,7 +30,7 @@ pip install numpy==1.22
 
 Install their download tool `s5cmd`, already in our envsftool.yaml. Then download the dataset:
 ```bash
-# train is really big (750): totally 966 GB
+# train is really big (700): totally 966 GB
 s5cmd --numworkers 12 --no-sign-request cp "s3://argoverse/datasets/av2/sensor/train/*" av2/sensor/train 
 
 # val (150) and test (150): totally 168GB + 168GB
@@ -61,7 +61,7 @@ s5cmd --numworkers 12 --no-sign-request cp "s3://argoverse/datasets/av2/lidar/te
 
 | Dataset      | # Total Scene | # Total Frames |
 | ------------ | ------------- | -------------- |
-| Sensor/train | 750           | 110071         |
+| Sensor/train | 700           | 110071         |
 | Sensor/val   | 150           | 23547          |
 | Sensor/test  | 150           | 23574          |
 | LiDAR/train  | 16000         | -              |
