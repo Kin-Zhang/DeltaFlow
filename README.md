@@ -33,7 +33,7 @@ European Conference on Computer Vision (**ECCV**) 2024
 
 - **ICP-Flow: LiDAR Scene Flow Estimation with ICP**  
 *Yancong Lin, Holger Caesar*  
-Conference on Computer Vision and Pattern Recognition (**CVPR**) 2024
+Conference on Computer Vision and Pattern Recognition (**CVPR**) 2024  
 [ Optimization-based ] [ Self-Supervised ] - [ [arXiv](https://arxiv.org/abs/2402.17351) ] [ [Project](https://github.com/yanconglin/ICP-Flow) ] &rarr; [here](#icp-flow)
 
 - **DeFlow: Decoder of Scene Flow Network in Autonomous Driving**  
