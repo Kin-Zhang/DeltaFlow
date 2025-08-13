@@ -214,7 +214,7 @@ class ModelWrapper(LightningModule):
         if self.save_res:
             # Save the dictionaries to a pickle file
             with open(str(self.save_res_path)+'.pkl', 'wb') as f:
-                pickle.dump((self.metrics.epe_3way, self.metrics.bucketed, self.metrics.epe_ssf, self.metrics.mean_num_occupied_voxels), f)
+                pickle.dump((self.metrics.epe_3way, self.metrics.bucketed, self.metrics.epe_ssf), f)
             print(f"We already write the {self.vis_name} into the dataset, please run following commend to visualize the flow. Copy and paste it to your terminal:")
             print(f"python tools/visualization.py --res_name '{self.vis_name}' --data_dir {self.dataset_path}")
             print(f"Enjoy! ^v^ ------ \n")
@@ -239,11 +239,6 @@ class ModelWrapper(LightningModule):
         else:
             final_flow[~batch['gm0']] = res_dict['flow'] + pose_flow[~batch['gm0']]
 
-        if 'num_occupied_voxels' in res_dict:
-            num_occupied_voxels = res_dict['num_occupied_voxels']
-        else:
-            num_occupied_voxels = None
-
         if self.av2_mode == 'val': # since only val we have ground truth flow to eval
             gt_flow = batch["flow"]
             v1_dict = evaluate_leaderboard(final_flow[eval_mask], pose_flow[eval_mask], pc0[eval_mask], \
@@ -253,7 +248,7 @@ class ModelWrapper(LightningModule):
                                     gt_flow[eval_mask], batch['flow_is_valid'][eval_mask], batch['flow_category_indices'][eval_mask])
             ssf_dict = evaluate_ssf(final_flow, pose_flow, pc0, \
                                     gt_flow, batch['flow_is_valid'], batch['flow_category_indices'])
-            self.metrics.step(v1_dict, v2_dict, ssf_dict, num_occupied_voxels)
+            self.metrics.step(v1_dict, v2_dict, ssf_dict)
         
         # NOTE (Qingwen): Since val and test, we will force set batch_size = 1 
         if self.save_res or self.av2_mode == 'test': # test must save data to submit in the online leaderboard.    
