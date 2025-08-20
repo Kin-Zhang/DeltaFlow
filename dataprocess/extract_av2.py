@@ -40,7 +40,7 @@ from copy import deepcopy
 import os, sys
 BASE_DIR = os.path.abspath(os.path.join( os.path.dirname( __file__ ), '..' ))
 sys.path.append(BASE_DIR)
-from dataprocess.misc_data import create_reading_index
+from dataprocess.misc_data import create_reading_index, check_h5py_file_exists
 from src.utils.av2_eval import read_ego_SE3_sensor
 
 BOUNDING_BOX_EXPANSION: Final = 0.2
@@ -92,15 +92,23 @@ def read_pose_pc_ground(data_dir: Path, log_id: str, timestamp: int, avm: Argove
     ego2sensor_pose = read_ego_SE3_sensor((data_dir / log_id))['up_lidar']
     filtered_log_poses_df = log_poses_df[log_poses_df["timestamp_ns"].isin([timestamp])]
     pose = convert_pose_dataframe_to_SE3(filtered_log_poses_df.loc[filtered_log_poses_df["timestamp_ns"] == timestamp])
-    pc = Sweep.from_feather(data_dir / log_id / "sensors" / "lidar" / f"{timestamp}.feather").xyz
+    av2_sweep = Sweep.from_feather(data_dir / log_id / "sensors" / "lidar" / f"{timestamp}.feather")
+    pc = av2_sweep.xyz
+
+    # ref: https://github.com/argoverse/av2-api/issues/77
+    lidar_id = np.zeros(len(pc), dtype=np.uint8)
+    lidar_id[av2_sweep.laser_number < 32] = 1
+    lidar_id[av2_sweep.laser_number >= 32] = 2
+    lidar_dt = av2_sweep.offset_ns / 1e9 # to second
+
     # transform to city coordinate since sweeps[0].xyz is in ego coordinate to get ground mask
     is_ground = avm.get_ground_points_boolean(pose.transform_point_cloud(pc))
 
     # NOTE(SeFlow): transform to sensor coordinate, since some ray-casting based methods need sensor coordinate
     pc = ego2sensor_pose.inverse().transform_point_cloud(pc) 
-    return pc, pose, is_ground
+    return pc, lidar_id, lidar_dt, pose, is_ground
 
-def compute_sceneflow(data_dir: Path, log_id: str, timestamps: Tuple[int, int]) -> Dict[str, Union[np.ndarray, SE3]]:
+def compute_sceneflow(data_dir: Path, log_id: str, timestamps: Tuple[int, int], dclass) -> Dict[str, Union[np.ndarray, SE3]]:
     """Compute sceneflow between the sweeps at the given timestamps.
         Args:
           data_dir: Argoverse 2.0 directory, e.g. /home/kin/data/av2/sensor/train
@@ -127,12 +135,11 @@ def compute_sceneflow(data_dir: Path, log_id: str, timestamps: Tuple[int, int]) 
         ego1_SE3_ego0.translation = ego1_SE3_ego0.translation.astype(np.float32)
         
         flow = ego1_SE3_ego0.transform_point_cloud(sweeps[0].xyz) -  sweeps[0].xyz
-        # Convert to float32s
         flow = flow.astype(np.float32)
         
         valid = np.ones(len(sweeps[0].xyz), dtype=np.bool_)
-        # classes = -np.ones(len(sweeps[0].xyz), dtype=np.int8)
         classes = np.zeros(len(sweeps[0].xyz), dtype=np.uint8)
+        instances = np.zeros(len(sweeps[0].xyz), dtype=np.int16)
 
         # # old version
         # for id in cuboids[0]:
@@ -173,9 +180,10 @@ def compute_sceneflow(data_dir: Path, log_id: str, timestamps: Tuple[int, int]) 
                 obj_flow = c1_SE3_c0.transform_point_cloud(obj_pts) - obj_pts
                 classes[obj_mask] = CATEGORY_TO_INDEX[str(c0.category)]
                 flow[obj_mask] = obj_flow.astype(np.float32)
+                instances[obj_mask] = (dclass[id]+1)
             else:
                 valid[obj_mask] = 0
-        return flow, classes, valid, ego1_SE3_ego0
+        return flow, classes, valid, ego1_SE3_ego0, instances
     sweeps = [Sweep.from_feather(data_dir / log_id / "sensors" / "lidar" / f"{ts}.feather") for ts in timestamps]
 
     # ================== Load annotations ==================
@@ -203,24 +211,28 @@ def compute_sceneflow(data_dir: Path, log_id: str, timestamps: Tuple[int, int]) 
     filtered_log_poses_df = log_poses_df[log_poses_df["timestamp_ns"].isin(timestamps)]
     poses = [convert_pose_dataframe_to_SE3(filtered_log_poses_df.loc[filtered_log_poses_df["timestamp_ns"] == ts]) for ts in timestamps]
 
-    flow_0_1, classes_0, valid_0, ego_motion = compute_flow(sweeps, cuboids, poses)
+    flow_0_1, classes_0, valid_0, ego_motion, instances = compute_flow(sweeps, cuboids, poses)
 
     return {'pcl_0': sweeps[0].xyz, 'pcl_1' :sweeps[1].xyz, 'flow_0_1': flow_0_1,
             'valid_0': valid_0, 'classes_0': classes_0, 
-            'pose_0': poses[0], 'pose_1': poses[1],
+            'pose_0': poses[0], 'pose_1': poses[1], 'instances': instances[0],
             'ego_motion': ego_motion}
 
 def process_log(data_dir: Path, log_id: str, output_dir: Path, n: Optional[int] = None) :
 
-    def create_group_data(group, pc, gm, pose, flow_0to1=None, flow_valid=None, flow_category=None, ego_motion=None):
+    def create_group_data(group, pc, pc_id, pc_dt, gm, pose, flow_0to1=None, flow_valid=None, flow_category=None, flow_instance=None, ego_motion=None):
         group.create_dataset('lidar', data=pc.astype(np.float32))
         group.create_dataset('ground_mask', data=gm.astype(bool))
         group.create_dataset('pose', data=pose.astype(np.float32))
+        # lidar_id for visualization and lidar_dt for HiMo mainly: 
+        group.create_dataset('lidar_id', data=pc_id.astype(np.uint8)) # sensor id
+        group.create_dataset('lidar_dt', data=pc_dt.astype(np.float32)) # deltaT
         if flow_0to1 is not None:
             # ground truth flow information
             group.create_dataset('flow', data=flow_0to1.astype(np.float32))
             group.create_dataset('flow_is_valid', data=flow_valid.astype(bool))
             group.create_dataset('flow_category_indices', data=flow_category.astype(np.uint8))
+            group.create_dataset('flow_instance_id', data=flow_instance.astype(np.int16))
             group.create_dataset('ego_motion', data=ego_motion.astype(np.float32))
 
     log_map_dirpath = data_dir / log_id / "map"
@@ -235,29 +247,31 @@ def process_log(data_dir: Path, log_id: str, output_dir: Path, n: Optional[int] 
                         for file in os.listdir(data_dir / log_id / "sensors/lidar")
                         if file.endswith('.feather')])
 
+    
     gt_flow_flag = False if not (data_dir / log_id / "annotations.feather").exists() else True
-
+    if check_h5py_file_exists(output_dir/f'{log_id}.h5', timestamps):
+        return
     # if n is not None:
     #     iter_bar = tqdm(zip(timestamps, timestamps[1:]), leave=False,
     #                      total=len(timestamps) - 1, position=n,
     #                      desc=f'Log {log_id}')
     # else:
     #     iter_bar = zip(timestamps, timestamps[1:])
-
+    dclass = defaultdict(lambda: len(dclass))
     with h5py.File(output_dir/f'{log_id}.h5', 'a') as f:
         for cnt, ts0 in enumerate(timestamps):
             group = f.create_group(str(ts0))
-            pc0, pose0, is_ground_0 = read_pose_pc_ground(data_dir, log_id, ts0, avm)
+            pc0, lidar_id0, lidar_dt0, pose0, is_ground_0 = read_pose_pc_ground(data_dir, log_id, ts0, avm)
             if pc0.shape[0] < 256:
                 print(f'{log_id}/{ts0} has less than 256 points, skip this scenarios. Please check the data if needed.')
                 break
             if cnt == len(timestamps) - 1 or not gt_flow_flag:
-                create_group_data(group, pc0, is_ground_0.astype(np.bool_), pose0.transform_matrix.astype(np.float32))
+                create_group_data(group, pc0, lidar_id0, lidar_dt0, is_ground_0.astype(np.bool_), pose0.transform_matrix.astype(np.float32))
             else:
                 ts1 = timestamps[cnt + 1]
-                scene_flow = compute_sceneflow(data_dir, log_id, (ts0, ts1))
-                create_group_data(group, pc0, is_ground_0.astype(np.bool_), pose0.transform_matrix.astype(np.float32),
-                                  scene_flow['flow_0_1'], scene_flow['valid_0'], scene_flow['classes_0'],
+                scene_flow = compute_sceneflow(data_dir, log_id, (ts0, ts1), dclass)
+                create_group_data(group, pc0, lidar_id0, lidar_dt0, is_ground_0.astype(np.bool_), pose0.transform_matrix.astype(np.float32),
+                                  scene_flow['flow_0_1'], scene_flow['valid_0'], scene_flow['classes_0'], scene_flow['instances'],
                                   scene_flow['ego_motion'].transform_matrix.astype(np.float32))
 
 def proc(x, ignore_current_process=False):

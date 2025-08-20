@@ -100,3 +100,6 @@ python -c "from assets.cuda.chamfer3D import nnChamferDis;print('successfully im
 
 3. torch_scatter problem: `OSError: /home/kin/mambaforge/envs/opensf-v2/lib/python3.10/site-packages/torch_scatter/_version_cpu.so: undefined symbol: _ZN5torch3jit17parseSchemaOrNameERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE`
    Solved by install the torch-cuda version: `pip install https://data.pyg.org/whl/torch-2.0.0%2Bcu118/torch_scatter-2.1.2%2Bpt20cu118-cp310-cp310-linux_x86_64.whl`
+
+4. cuda package problem: `ValueError(f"Unknown CUDA arch ({arch}) or GPU not supported")`
+   Solved by [checking GPU compute](https://developer.nvidia.cn/cuda-gpus#compute) then manually assign: `export TORCH_CUDA_ARCH_LIST=8.6`

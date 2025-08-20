@@ -6,6 +6,9 @@ dependencies:
   - python=3.8
   - pytorch::pytorch=2.0.0
   - pytorch::torchvision
+  - pytorch::pytorch-cuda=11.8
+  - nvidia/label/cuda-11.8.0::cuda
+  - nvidia/label/cuda-11.8.0::cuda-toolkit
   - mkl==2024.0.0
   - numba
   - numpy==1.22
@@ -13,9 +16,9 @@ dependencies:
   - pip
   - scipy
   - tqdm
-  - scikit-learn
+  - scikit-learn=1.2.2
   - fire
-  - hdbscan
+  - hdbscan=0.8.29
   - s5cmd
   - pip:
     - nuscenes-devkit

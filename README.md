@@ -13,8 +13,8 @@ It is also an official implementation of the following papers (sorted by the tim
 
 - **HiMo: High-Speed Objects Motion Compensation in Point Clouds** (SeFlow++)   
 *Qingwen Zhang, Ajinkya Khoche, Yi Yang, Li Ling, Sina Sharif Mansouri, Olov Andersson, Patric Jensfelt*  
-Preprint; Under review; 2025   
-[ Strategy ] [ Self-Supervised ] - [ [arXiv](https://arxiv.org/abs/2503.00803) ] [ [Project](https://kin-zhang.github.io/HiMo/) ]
+IEEE Transactions on Robotics (**T-RO**) 2025   
+[ Strategy ] [ Self-Supervised ] - [ [arXiv](https://arxiv.org/abs/2503.00803) ] [ [Project](https://kin-zhang.github.io/HiMo/) ] &rarr; [here](#seflow-1)
 
 - **Flow4D: Leveraging 4D Voxel Network for LiDAR Scene Flow Estimation**  
 *Jaeyeul Kim, Jungwan Woo, Ukcheol Shin, Jean Oh, Sunghoon Im*  
@@ -134,10 +134,8 @@ Train Flow4D with the leaderboard submit config. [Runtime: Around 18 hours in 4x
 
 ```bash
 python train.py model=flow4d lr=1e-3 epochs=15 batch_size=8 num_frames=5 loss_fn=deflowLoss "voxel_size=[0.2, 0.2, 0.2]" "point_cloud_range=[-51.2, -51.2, -3.2, 51.2, 51.2, 3.2]"
-```
 
-Pretrained weight can be downloaded through:
-```bash
+# Pretrained weight can be downloaded through:
 wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/flow4d_best.ckpt
 ```
 
@@ -165,18 +163,30 @@ wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/ssf_best.ckpt
 wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/ssf_long.ckpt
 ```
 
+### Feed-Forward Self-Supervised Model Training
 
-### SeFlow
+Train SeFlow/SeFlow++ needed to:
+1) process auto-label process.
+2) specify the loss function, we set the config of our best model in the leaderboard.
 
-Train SeFlow needed to specify the loss function, we set the config of our best model in the leaderboard. [Runtime: Around 11 hours in 4x A100 GPUs.]
+#### SeFlow
 
 ```bash
-python train.py model=deflow lr=2e-4 epochs=9 batch_size=16 loss_fn=seflowLoss "add_seloss={chamfer_dis: 1.0, static_flow_loss: 1.0, dynamic_chamfer_dis: 1.0, cluster_based_pc0pc1: 1.0}" "model.target.num_iters=2"
+# [Runtime: Around 11 hours in 4x A100 GPUs.]
+python train.py model=deflow lr=2e-4 epochs=9 batch_size=16 loss_fn=seflowLoss +ssl_label=seflow_auto "+add_seloss={chamfer_dis: 1.0, static_flow_loss: 1.0, dynamic_chamfer_dis: 1.0, cluster_based_pc0pc1: 1.0}" "model.target.num_iters=2"
+
+# Pretrained weight can be downloaded through:
+wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/seflow_best.ckpt
 ```
 
-Pretrained weight can be downloaded through:
+#### SeFlow++
+
 ```bash
-wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/seflow_best.ckpt
+# [Runtime: Around ? hours in ? GPUs.]
+python train.py model=deflowpp lr=2e-4 epochs=9 batch_size=16 loss_fn=seflowppLoss +ssl_label=seflowpp_auto "add_seloss={chamfer_dis: 1.0, static_flow_loss: 1.0, dynamic_chamfer_dis: 1.0, cluster_based_pc0pc1: 1.0}" "model.target.num_iters=2"
+
+# Pretrained weight can be downloaded through:
+wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/seflowpp_best.ckpt
 ```
 
 ### DeFlow
@@ -185,10 +195,8 @@ Train DeFlow with the leaderboard submit config. [Runtime: Around 6-8 hours in 4
 
 ```bash
 python train.py model=deflow lr=2e-4 epochs=15 batch_size=16 loss_fn=deflowLoss
-```
 
-Pretrained weight can be downloaded through:
-```bash
+# Pretrained weight can be downloaded through:
 wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/deflow_best.ckpt
 ```
 

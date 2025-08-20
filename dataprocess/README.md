@@ -175,9 +175,9 @@ Or you can run testing file to visualize the data.
 
 ```bash
 # view gt flow
-python tools/visualization.py --data_dir /home/kin/data/av2/preprocess/sensor/mini --res_name flow
+python tools/visualization.py --data_dir /home/kin/data/av2/h5py/sensor/mini --res_name flow
 
-python tools/visualization.py --data_dir /home/kin/data/waymo/preprocess/val --res_name flow
+python tools/visualization.py --data_dir /home/kin/data/waymo/h5py/val --res_name flow
 ```
 
 ### Self-Supervised Process
@@ -186,5 +186,5 @@ Process train data for self-supervised learning. Only training data needs this s
 [Runtime: Normally need 15 hours for my desktop, 3 hours for the cluster with five available nodes parallel running.]
 
 ```bash
-python process.py --data_dir /home/kin/data/av2/preprocess_v2/sensor/train --scene_range 0,701
+python process.py --data_dir /home/kin/data/av2/h5py/sensor/train --scene_range 0,701
 ```
