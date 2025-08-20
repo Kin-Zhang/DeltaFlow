@@ -92,6 +92,7 @@ class ModelWrapper(LightningModule):
         self.vis_name = cfg.res_name if 'res_name' in cfg else 'default'
         self.save_hyperparameters()
 
+    # FIXME(Qingwen 2025-08-20): update the loss_calculation fn alone to make all things pretty here....
     def training_step(self, batch, batch_idx):
         self.model.timer[4].start("One Scan in model")
         res_dict = self.model(batch)
@@ -101,7 +102,7 @@ class ModelWrapper(LightningModule):
         # compute loss
         total_loss = 0.0
 
-        if self.cfg_loss_name in ['seflowLoss']:
+        if self.cfg_loss_name in ['seflowLoss', 'seflowppLoss']:
             loss_items, weights = zip(*[(key, weight) for key, weight in self.add_seloss.items()])
             loss_logger = {'chamfer_dis': 0.0, 'dynamic_chamfer_dis': 0.0, 'static_flow_loss': 0.0, 'cluster_based_pc0pc1': 0.0}
         else:
@@ -130,11 +131,15 @@ class ModelWrapper(LightningModule):
             if 'pc0_dynamic' in batch:
                 dict2loss['pc0_labels'] = batch['pc0_dynamic'][batch_id][pc0_valid_from_pc2res]
                 dict2loss['pc1_labels'] = batch['pc1_dynamic'][batch_id][pc1_valid_from_pc2res]
+            if 'pch1_dynamic' in batch:
+                dict2loss['pch1_labels'] = batch['pch1_dynamic'][batch_id][res_dict['pch1_valid_point_idxes'][batch_id]]
 
             # different methods may don't have this in the res_dict
             if 'pc0_points_lst' in res_dict and 'pc1_points_lst' in res_dict:
                 dict2loss['pc0'] = pc0_points_lst[batch_id]
                 dict2loss['pc1'] = pc1_points_lst[batch_id]
+            if 'pch1_points_lst' in res_dict:
+                dict2loss['pch1'] = res_dict['pch1_points_lst'][batch_id]
 
             res_loss = self.loss_fn(dict2loss)
             for i, loss_name in enumerate(loss_items):
@@ -143,7 +148,7 @@ class ModelWrapper(LightningModule):
                 loss_logger[key] += res_loss[key]
 
         self.log("trainer/loss", total_loss/batch_sizes, sync_dist=True, batch_size=self.batch_size, prog_bar=True)
-        if self.add_seloss is not None and self.cfg_loss_name in ['seflowLoss']:
+        if self.add_seloss is not None and self.cfg_loss_name in ['seflowLoss', 'seflowppLoss']:
             for key in loss_logger:
                 self.log(f"trainer/{key}", loss_logger[key]/batch_sizes, sync_dist=True, batch_size=self.batch_size)
         self.model.timer[5].stop()

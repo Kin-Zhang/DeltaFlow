@@ -29,8 +29,8 @@ from src.dataset import HDF5Dataset, collate_fn_pad
 from src.trainer import ModelWrapper
 
 def precheck_cfg_valid(cfg):
-    if cfg.loss_fn == 'seflowLoss' and cfg.add_seloss is None:
-        raise ValueError("Please specify the self-supervised loss items for seflowLoss.")
+    if cfg.loss_fn in ['seflowLoss', 'seflowppLoss'] and (cfg.add_seloss is None or cfg.ssl_label is None):
+        raise ValueError("Please specify the self-supervised loss items and auto-label source for seflow-series loss.")
     
     grid_size = [(cfg.point_cloud_range[3] - cfg.point_cloud_range[0]) * (1/cfg.voxel_size[0]),
                  (cfg.point_cloud_range[4] - cfg.point_cloud_range[1]) * (1/cfg.voxel_size[1]),
@@ -57,7 +57,7 @@ def main(cfg):
     precheck_cfg_valid(cfg)
     pl.seed_everything(cfg.seed, workers=True)
 
-    train_dataset = HDF5Dataset(cfg.train_data, n_frames=cfg.num_frames, dufo=(cfg.loss_fn == 'seflowLoss'))
+    train_dataset = HDF5Dataset(cfg.train_data, n_frames=cfg.num_frames, ssl_label=cfg.ssl_label)
     train_loader = DataLoader(train_dataset,
                               batch_size=cfg.batch_size,
                               shuffle=True,

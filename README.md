@@ -183,7 +183,7 @@ wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/seflow_best.ckp
 
 ```bash
 # [Runtime: Around ? hours in ? GPUs.]
-python train.py model=deflowpp lr=2e-4 epochs=9 batch_size=16 loss_fn=seflowppLoss +ssl_label=seflowpp_auto "add_seloss={chamfer_dis: 1.0, static_flow_loss: 1.0, dynamic_chamfer_dis: 1.0, cluster_based_pc0pc1: 1.0}" "model.target.num_iters=2"
+python train.py model=deflowpp lr=2e-4 epochs=9 batch_size=16 loss_fn=seflowppLoss +ssl_label=seflowpp_auto "+add_seloss={chamfer_dis: 1.0, static_flow_loss: 1.0, dynamic_chamfer_dis: 1.0, cluster_based_pc0pc1: 1.0}" "model.target.num_iters=2" num_frames=3
 
 # Pretrained weight can be downloaded through:
 wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/seflowpp_best.ckpt
