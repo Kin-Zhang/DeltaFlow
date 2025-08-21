@@ -11,7 +11,7 @@ We've updated the process dataset for:
 - [x] Argoverse 2.0: check [here](#argoverse-20). The process script Involved from [DeFlow](https://github.com/KTH-RPL/DeFlow).
 - [x] Waymo: check [here](#waymo-dataset). The process script was involved from [SeFlow](https://github.com/KTH-RPL/SeFlow).
 - [x] nuScenes: check [here](#nuscenes), The process script was involved from [DeltaFlow](https://github.com/Kin-Zhang/DeltaFlow).
-- [ ] ZOD (w/o gt): check [here](#zod-dataset). The process script was involved from [HiMo](https://kin-zhang.github.io/HiMo).
+- [x] ZOD (w/o gt): check [here](#zod-dataset). The process script was involved from [HiMo](https://kin-zhang.github.io/HiMo). (It could be a good first reference for users to extract other datasets in the future.)
 - [ ] TruckScene: done coding, public after review. Will be involved later by another paper.
 
 If you want to **use all datasets above**, there is a **specific environment** in [envsftool.yaml](../envsftool.yaml) to install all the necessary packages. As Waymo package have different configuration and conflict with the main environment. Setup through the following command:
@@ -123,12 +123,27 @@ tar -xvf waymo_map.tar.gz -C /home/kin/data/waymo/flowlabel
 | train   | 799           | 155687         |
 | val     | 203           | 39381          |
 
+### ZOD Dataset
+
+Although ZOD have the most dense LiDAR sensor (128-channel), the dataset itself **does not include ground truth flow**. 
+We provide the extraction script for Self-Supervised Learning (SSL) to train and visualize the results etc, again **no evaluation available** here.
+
+To download the ZOD dataset, you need follow [the instruction here](https://zod.zenseact.com/download/): send email and ask for the download from the team.
+
+For HiMo, we only downloaded [drives-set](https://zod.zenseact.com/drives/) for test purpose etc. The total drives-set includes 29 sequences (Total size: 303G). Here are [quick video play](https://www.bilibili.com/video/BV1Sh4y1z7v2) for each scene in the drives.
+
+Please check the scripts: [dataprocess/extract_zod.py](./extract_zod.py) in detail, current we only process one scene while feel free to comment out for all scene etc.
+
+
+
 ## Process
-This directory contains the scripts to preprocess the datasets. 
+
+This directory contains the scripts to preprocess the datasets into `.h5` files. 
 
 - `extract_av2.py`: Process the datasets in Argoverse 2.0.
 - `extract_nus.py`: Process the datasets in nuScenes.
 - `extract_waymo.py`: Process the datasets in Waymo.
+- `extract_zod.py`: Process the datasets in ZOD.
 
 Example Running command:
 ```bash
