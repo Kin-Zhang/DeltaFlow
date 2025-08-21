@@ -76,10 +76,11 @@ def main(cfg):
 
     output_dir = HydraConfig.get().runtime.output_dir
     # overwrite logging folder name for SSL.
-    if cfg.loss_fn == 'seflowLoss':
-        cfg.output = cfg.output.replace(cfg.model.name, "seflow")
-        output_dir = output_dir.replace(cfg.model.name, "seflow")
-        method_name = "seflow"
+    if cfg.loss_fn in ['seflowLoss', 'seflowppLoss']:
+        tmp_ = cfg.loss_fn.split('Loss')[0] + '-' + cfg.model.name
+        cfg.output = cfg.output.replace(cfg.model.name, tmp_)
+        output_dir = output_dir.replace(cfg.model.name, tmp_)
+        method_name = tmp_
     else:
         method_name = cfg.model.name
 
@@ -140,7 +141,8 @@ def main(cfg):
 
     # NOTE(Qingwen): search & check: def training_step(self, batch, batch_idx)
     trainer.fit(model, train_dataloaders = train_loader, val_dataloaders = val_loader, ckpt_path = cfg.checkpoint)
-    wandb.finish()
+    if cfg.wandb_mode != "disabled":
+        wandb.finish()
 
 if __name__ == "__main__":
     main()
