@@ -133,7 +133,7 @@ mamba activate opensf
 Train Flow4D with the leaderboard submit config. [Runtime: Around 18 hours in 4x RTX 3090 GPUs.]
 
 ```bash
-python train.py model=flow4d lr=1e-3 epochs=15 batch_size=8 num_frames=5 loss_fn=deflowLoss "voxel_size=[0.2, 0.2, 0.2]" "point_cloud_range=[-51.2, -51.2, -3.2, 51.2, 51.2, 3.2]"
+python train.py model=flow4d optimizer.lr=1e-3 epochs=15 batch_size=8 num_frames=5 loss_fn=deflowLoss "voxel_size=[0.2, 0.2, 0.2]" "point_cloud_range=[-51.2, -51.2, -3.2, 51.2, 51.2, 3.2]"
 
 # Pretrained weight can be downloaded through:
 wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/flow4d_best.ckpt
@@ -151,7 +151,7 @@ pip install https://data.pyg.org/whl/torch-2.0.0%2Bcu118/torch_scatter-2.1.2%2Bp
 Train SSF with the leaderboard submit config. [Runtime: Around 6 hours in 8x A100 GPUs.]
 
 ```bash
-python train.py model=ssf lr=8e-3 epochs=25 batch_size=64 loss_fn=deflowLoss "voxel_size=[0.2, 0.2, 6]" "point_cloud_range=[-51.2, -51.2, -3, 51.2, 51.2, 3]"
+python train.py model=ssf optimizer.lr=8e-3 epochs=25 batch_size=64 loss_fn=deflowLoss "voxel_size=[0.2, 0.2, 6]" "point_cloud_range=[-51.2, -51.2, -3, 51.2, 51.2, 3]"
 ```
 
 Pretrained weight can be downloaded through:
@@ -173,7 +173,7 @@ Train SeFlow/SeFlow++ needed to:
 
 ```bash
 # [Runtime: Around 11 hours in 4x A100 GPUs.]
-python train.py model=deflow lr=2e-4 epochs=9 batch_size=16 loss_fn=seflowLoss +ssl_label=seflow_auto "+add_seloss={chamfer_dis: 1.0, static_flow_loss: 1.0, dynamic_chamfer_dis: 1.0, cluster_based_pc0pc1: 1.0}" "model.target.num_iters=2"
+python train.py model=deflow optimizer.lr=2e-4 epochs=9 batch_size=16 loss_fn=seflowLoss +ssl_label=seflow_auto "+add_seloss={chamfer_dis: 1.0, static_flow_loss: 1.0, dynamic_chamfer_dis: 1.0, cluster_based_pc0pc1: 1.0}" "model.target.num_iters=2"
 
 # Pretrained weight can be downloaded through:
 wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/seflow_best.ckpt
@@ -183,7 +183,7 @@ wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/seflow_best.ckp
 
 ```bash
 # [Runtime: Around ? hours in ? GPUs.]
-python train.py model=deflowpp lr=2e-4 epochs=9 batch_size=16 loss_fn=seflowppLoss +ssl_label=seflowpp_auto "+add_seloss={chamfer_dis: 1.0, static_flow_loss: 1.0, dynamic_chamfer_dis: 1.0, cluster_based_pc0pc1: 1.0}" "model.target.num_iters=2" num_frames=3
+python train.py model=deflowpp optimizer.lr=2e-4 epochs=9 batch_size=16 loss_fn=seflowppLoss +ssl_label=seflowpp_auto "+add_seloss={chamfer_dis: 1.0, static_flow_loss: 1.0, dynamic_chamfer_dis: 1.0, cluster_based_pc0pc1: 1.0}" "model.target.num_iters=2" num_frames=3
 
 # Pretrained weight can be downloaded through:
 wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/seflowpp_best.ckpt
@@ -194,7 +194,7 @@ wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/seflowpp_best.c
 Train DeFlow with the leaderboard submit config. [Runtime: Around 6-8 hours in 4x A100 GPUs.] Please change `batch_size&lr` accoordingly if you don't have enough GPU memory. (e.g. `batch_size=6` for 24GB GPU)
 
 ```bash
-python train.py model=deflow lr=2e-4 epochs=15 batch_size=16 loss_fn=deflowLoss
+python train.py model=deflow optimizer.lr=2e-4 epochs=15 batch_size=16 loss_fn=deflowLoss
 
 # Pretrained weight can be downloaded through:
 wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/deflow_best.ckpt

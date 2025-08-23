@@ -125,7 +125,7 @@ class SSF(BaseModel):
 
         pc0_valid_point_idxes = [e["point_idxes"] for e in pc0_voxel_infos_lst]
         # since we concat in voxel_infos_dict
-        pc1_valid_point_idxes = [e["point_idxes"]- pc0s.shape[1] for e in pc1_voxel_infos_lst]
+        pc1_valid_point_idxes = [e["point_idxes"] - pc0s.shape[1] for e in pc1_voxel_infos_lst]
 
         model_res = {
             "flow": flows,

@@ -29,6 +29,17 @@ MAX_AXIS_RANGE = 50 # HARD CODED: remove far away points
 BASE_DIR = os.path.abspath(os.path.join( os.path.dirname( __file__ )))
 
 def check_data_key(filekey, keyname, scene_id, ts):
+    """
+    Checks if a specified key exists in the given file-like object and deletes it if present.
+
+    This is typically used to remove old or outdated data before overwriting with new data.
+    
+    Args:
+        filekey: The file-like object (e.g., HDF5 group or dictionary) to check for the key.
+        keyname: The name of the key to check and potentially delete.
+        scene_id: Identifier for the scene (used for logging or warning purposes).
+        ts: Timestamp or frame identifier (used for logging or warning purposes).
+    """
     if keyname in filekey:
         # print(f"Warning: {scene_id} {ts} has {keyname}, old data will be removed and overwritten.")
         del filekey[keyname]

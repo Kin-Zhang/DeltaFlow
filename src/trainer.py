@@ -27,7 +27,7 @@ sys.path.append(BASE_DIR)
 from src.utils import import_func
 from src.utils.mics import weights_init, zip_res
 from src.utils.av2_eval import write_output_file
-from src.models.basic import cal_pose0to1
+from src.models.basic import cal_pose0to1, WarmupCosLR
 from src.utils.eval_metric import OfficialMetrics, evaluate_leaderboard, evaluate_leaderboard_v2, evaluate_ssf
 
 # debugging tools
@@ -39,7 +39,25 @@ class ModelWrapper(LightningModule):
     def __init__(self, cfg, eval=False):
         super().__init__()
 
-        # set grid size
+        default_self_values = {
+            "batch_size": 1,
+            "lr": 2e-4,
+            "epochs": 3,
+            "loss_fn": 'deflowLoss',
+            "add_seloss": None,
+            "checkpoint": None,
+            "leaderboard_version": 2,
+            "supervised_flag": True,
+            "save_res": False,
+            "res_name": "default",
+            "num_frames": 2,
+            "optimizer": None,
+            "dataset_path": None,
+            "av2_mode": None,
+        }
+        for key, default in default_self_values.items():
+            setattr(self, key, cfg.get(key, default))
+
         if ('voxel_size' in cfg.model.target) and ('point_cloud_range' in cfg.model.target) and not eval and 'point_cloud_range' in cfg:
             OmegaConf.set_struct(cfg.model.target, True)
             with open_dict(cfg.model.target):
@@ -54,42 +72,28 @@ class ModelWrapper(LightningModule):
                     abs(int((cfg.model.target.point_cloud_range[1] - cfg.model.target.point_cloud_range[4]) / cfg.model.target.voxel_size[1])),
                     abs(int((cfg.model.target.point_cloud_range[2] - cfg.model.target.point_cloud_range[5]) / cfg.model.target.voxel_size[2]))]
         
+        # ---> model
+        self.point_cloud_range = cfg.model.target.point_cloud_range
         self.model = instantiate(cfg.model.target)
         self.model.apply(weights_init)
-        
+        if 'pretrained_weights' in cfg and cfg.pretrained_weights is not None:
+            missing_keys, unexpected_keys = self.model.load_from_checkpoint(cfg.pretrained_weights)
+        # print(f"Model: {self.model.__class__.__name__}, Number of Frames: {self.num_frames}")
+
+        # ---> loss fn
         self.loss_fn = import_func("src.lossfuncs."+cfg.loss_fn) if 'loss_fn' in cfg else None
-        self.add_seloss = cfg.add_seloss if 'add_seloss' in cfg else None
-        self.cfg_loss_name = cfg.loss_fn if 'loss_fn' in cfg else None
+        self.cfg_loss_name = cfg.get("loss_fn", None)
         
-        self.batch_size = int(cfg.batch_size) if 'batch_size' in cfg else 1
-        self.lr = cfg.lr if 'lr' in cfg else None
-        self.epochs = cfg.epochs if 'epochs' in cfg else None
-        
+        # ---> evaluation metric
         self.metrics = OfficialMetrics()
 
-        self.load_checkpoint_path = cfg.checkpoint if 'checkpoint' in cfg else None
+        # ---> inference mode
+        if self.save_res and self.av2_mode in ['val', 'valid', 'test']:
+            self.save_res_path = Path(cfg.dataset_path).parent / "results" / cfg.output
+            os.makedirs(self.save_res_path, exist_ok=True)
+            print(f"We are in {cfg.av2_mode}, results will be saved in: {self.save_res_path} with version: {self.leaderboard_version} format for online leaderboard.")
 
-
-        self.leaderboard_version = cfg.leaderboard_version if 'leaderboard_version' in cfg else 1
-        # NOTE(Qingwen): since we have seflow version which is unsupervised, we need to set the flag to false.
-        self.supervised_flag = cfg.supervised_flag if 'supervised_flag' in cfg else True
-        self.save_res = False
-        if 'av2_mode' in cfg:
-            self.av2_mode = cfg.av2_mode
-            self.save_res = cfg.save_res if 'save_res' in cfg else False
-            
-            if self.save_res or self.av2_mode == 'test':
-                self.save_res_path = Path(cfg.dataset_path).parent / "results" / cfg.output
-                os.makedirs(self.save_res_path, exist_ok=True)
-                print(f"We are in {cfg.av2_mode}, results will be saved in: {self.save_res_path} with version: {self.leaderboard_version} format for online leaderboard.")
-        else:
-            self.av2_mode = None
-            if 'pretrained_weights' in cfg:
-                if cfg.pretrained_weights is not None:
-                    self.model.load_from_checkpoint(cfg.pretrained_weights)
-
-        self.dataset_path = cfg.dataset_path if 'dataset_path' in cfg else None
-        self.vis_name = cfg.res_name if 'res_name' in cfg else 'default'
+        # self.test_total_num = 0
         self.save_hyperparameters()
 
     # FIXME(Qingwen 2025-08-20): update the loss_calculation fn alone to make all things pretty here....
@@ -177,8 +181,22 @@ class ModelWrapper(LightningModule):
             pass
 
     def configure_optimizers(self):
-        optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
-        return optimizer
+        optimizers_ = {}
+        # default Adam
+        if self.optimizer.name == "AdamW":
+            optimizers_['optimizer'] = optim.AdamW(self.model.parameters(), lr=self.optimizer.lr, weight_decay=self.optimizer.get("weight_decay", 1e-4))
+        else: # if self.optimizer.name == "Adam":
+            optimizers_['optimizer'] = optim.Adam(self.model.parameters(), lr=self.optimizer.lr)
+
+        if "scheduler" in self.optimizer:
+            if self.optimizer.scheduler.name == "WarmupCosLR":
+                optimizers_['lr_scheduler'] = WarmupCosLR(optimizers_['optimizer'], self.optimizer.scheduler.get("min_lr", self.optimizer.lr*0.1), \
+                                        self.optimizer.lr, self.optimizer.scheduler.get("warmup_epochs", 1), self.epochs)
+            elif self.optimizer.scheduler.name == "StepLR":
+                optimizers_['lr_scheduler'] = optim.lr_scheduler.StepLR(optimizers_['optimizer'], step_size=self.optimizer.scheduler.get("step_size", self.trainer.max_epochs//3), \
+                                        gamma=self.optimizer.scheduler.get("gamma", 0.1))
+
+        return optimizers_
 
     def on_train_epoch_start(self):
         self.time_start_train_epoch = time.time()

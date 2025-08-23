@@ -134,7 +134,7 @@ def main(cfg):
         print("Initiating wandb and trainer successfully.  ^V^ ")
         print(f"We will use {cfg.gpus} GPUs to train the model. Check the checkpoints in {output_dir} checkpoints folder.")
         print("Total Train Dataset Size: ", len(train_dataset))
-        if cfg.add_seloss is not None and cfg.loss_fn == 'seflowLoss':
+        if cfg.add_seloss is not None and cfg.loss_fn in ['seflowLoss', 'seflowppLoss']:
             print(f"Note: We are in **self-supervised** training now. No ground truth label is used.")
             print(f"We will use these loss items in {cfg.loss_fn}: {cfg.add_seloss}")
         print("-"*40+"\n")

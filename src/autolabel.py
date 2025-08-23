@@ -30,14 +30,16 @@ def shiftClusterid(cluster):
 # mainly based on dufo with label inside for cluster-loss. Check HiMo Fig. 6 Top
 def seflow_auto(input_data):
     dufo = input_data['dufo'][:].astype(np.uint8)
-    # cluster = shiftClusterid(input_data['cluster'][:].astype(np.int16))
-    # raw seflow:
     cluster = shiftClusterid(input_data['dufocluster'][:].astype(np.int16))
     cluster[dufo == 0] = 0
     return cluster
 
 # based on dufo and nnd for dynamic then cluster-wise checking with reassign. Check HiMo Fig. 6 Bottom
-def seflowpp_auto(input_data):
+def seflowpp_auto(input_data, tau1=0.05, tau2=0.1):
+    """
+    check HiMo paper (Eq. 5) to know more about paramter setting here.
+    We didn't explore this parameter too much feel free to adjust as you want after reading the paper.
+    """
     dufo = input_data['dufo'][:].astype(np.uint8)
     cluster = shiftClusterid(input_data['cluster'][:].astype(np.int16))
     nnd = input_data['nnd'][:].astype(np.uint8)
@@ -53,6 +55,6 @@ def seflowpp_auto(input_data):
         r_dufo = np.sum(cluster_dufo>0)/all_pts
         r_nnd = np.sum(cluster_nnd>0)/all_pts
 
-        if min(r_dufo, r_nnd) > 0.05 and max(r_dufo, r_nnd) > 0.1:
+        if min(r_dufo, r_nnd) > tau1 and max(r_dufo, r_nnd) > tau2:
             dynamic[cluster == cluster_id] = cluster_id
     return dynamic
