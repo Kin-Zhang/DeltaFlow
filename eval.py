@@ -48,6 +48,7 @@ def main(cfg):
     checkpoint_params = DictConfig(torch_load_ckpt["hyper_parameters"])
     cfg.output = checkpoint_params.cfg.output + f"-e{torch_load_ckpt['epoch']}-{cfg.av2_mode}-v{cfg.leaderboard_version}"
     cfg.model.update(checkpoint_params.cfg.model)
+    cfg.num_frames = cfg.model.target.get('num_frames', checkpoint_params.cfg.get('num_frames', cfg.get('num_frames', 2)))
     
     mymodel = ModelWrapper.load_from_checkpoint(cfg.checkpoint, cfg=cfg, eval=True)
     print(f"\n---LOG[eval]: Loaded model from {cfg.checkpoint}. The backbone network is {checkpoint_params.cfg.model.name}.\n")
@@ -63,7 +64,7 @@ def main(cfg):
     trainer.validate(model = mymodel, \
                      dataloaders = DataLoader( \
                                             HDF5Dataset(cfg.dataset_path + f"/{cfg.av2_mode}", \
-                                                        n_frames=checkpoint_params.cfg.num_frames  if 'num_frames' in checkpoint_params.cfg else 2, \
+                                                        n_frames=cfg.num_frames, \
                                                         eval=True, leaderboard_version=cfg.leaderboard_version), \
                                             batch_size=1, shuffle=False))
     wandb.finish()

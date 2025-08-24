@@ -45,6 +45,7 @@ def main(cfg):
     checkpoint_params = DictConfig(torch.load(cfg.checkpoint)["hyper_parameters"])
     cfg.output = checkpoint_params.cfg.output
     cfg.model.update(checkpoint_params.cfg.model)
+    cfg.num_frames = cfg.model.target.get('num_frames', checkpoint_params.cfg.get('num_frames', cfg.get('num_frames', 2)))
     mymodel = ModelWrapper.load_from_checkpoint(cfg.checkpoint, cfg=cfg, eval=True)
 
     wandb_logger = WandbLogger(save_dir=output_dir,
@@ -57,7 +58,7 @@ def main(cfg):
     # NOTE(Qingwen): search & check in pl_model.py : def test_step(self, batch, res_dict)
     trainer.test(model = mymodel, \
                  dataloaders = DataLoader(\
-                     HDF5Dataset(cfg.dataset_path, n_frames=checkpoint_params.cfg.num_frames if 'num_frames' in checkpoint_params.cfg else 2), \
+                     HDF5Dataset(cfg.dataset_path, n_frames=cfg.num_frames), \
                     batch_size=1, shuffle=False))
     wandb.finish()
 

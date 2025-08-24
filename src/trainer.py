@@ -94,6 +94,7 @@ class ModelWrapper(LightningModule):
             print(f"We are in {cfg.av2_mode}, results will be saved in: {self.save_res_path} with version: {self.leaderboard_version} format for online leaderboard.")
 
         # self.test_total_num = 0
+        print(cfg)
         self.save_hyperparameters()
 
     # FIXME(Qingwen 2025-08-20): update the loss_calculation fn alone to make all things pretty here....
@@ -208,7 +209,7 @@ class ModelWrapper(LightningModule):
         self.model.timer.print(random_colors=False, bold=False)
 
         if self.av2_mode == 'test':
-            print(f"\nModel: {self.model.__class__.__name__}, Checkpoint from: {self.load_checkpoint_path}")
+            print(f"\nModel: {self.model.__class__.__name__}, Checkpoint from: {self.checkpoint}")
             print(f"Test results saved in: {self.save_res_path}, Please run submit command and upload to online leaderboard for results.")
             if self.leaderboard_version == 1:
                 print(f"\nevalai challenge 2010 phase 4018 submit --file {self.save_res_path}.zip --large --private\n")
@@ -221,8 +222,8 @@ class ModelWrapper(LightningModule):
             return
         
         if self.av2_mode == 'val':
-            print(f"\nModel: {self.model.__class__.__name__}, Checkpoint from: {self.load_checkpoint_path}")
-            print(f"More details parameters and training status are in checkpoints")        
+            print(f"\nModel: {self.model.__class__.__name__}, Checkpoint from: {self.checkpoint}")
+            print(f"More details parameters and training status are in the checkpoint file.")        
 
         self.metrics.normalize()
 
@@ -339,7 +340,7 @@ class ModelWrapper(LightningModule):
 
     def on_test_epoch_end(self):
         self.model.timer.print(random_colors=False, bold=False)
-        print(f"\n\nModel: {self.model.__class__.__name__}, Checkpoint from: {self.load_checkpoint_path}")
+        print(f"\n\nModel: {self.model.__class__.__name__}, Checkpoint from: {self.checkpoint}")
         print(f"We already write the flow_est into the dataset, please run following commend to visualize the flow. Copy and paste it to your terminal:")
         print(f"python tools/visualization.py --res_name '{self.vis_name}' --data_dir {self.dataset_path}")
         print(f"Enjoy! ^v^ ------ \n")
