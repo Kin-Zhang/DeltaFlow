@@ -15,6 +15,8 @@
 
 import os
 os.environ["OMP_NUM_THREADS"] = "1"
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 
 from av2.datasets.sensor.av2_sensor_dataloader import convert_pose_dataframe_to_SE3
 from av2.structures.sweep import Sweep
@@ -180,7 +182,7 @@ def compute_sceneflow(data_dir: Path, log_id: str, timestamps: Tuple[int, int], 
                 obj_flow = c1_SE3_c0.transform_point_cloud(obj_pts) - obj_pts
                 classes[obj_mask] = CATEGORY_TO_INDEX[str(c0.category)]
                 flow[obj_mask] = obj_flow.astype(np.float32)
-                instances[obj_mask] = (dclass[id]+1)
+                instances[obj_mask] = dclass[id]+1
             else:
                 valid[obj_mask] = 0
         return flow, classes, valid, ego1_SE3_ego0, instances
@@ -215,7 +217,7 @@ def compute_sceneflow(data_dir: Path, log_id: str, timestamps: Tuple[int, int], 
 
     return {'pcl_0': sweeps[0].xyz, 'pcl_1' :sweeps[1].xyz, 'flow_0_1': flow_0_1,
             'valid_0': valid_0, 'classes_0': classes_0, 
-            'pose_0': poses[0], 'pose_1': poses[1], 'instances': instances[0],
+            'pose_0': poses[0], 'pose_1': poses[1], 'instances': instances,
             'ego_motion': ego_motion}
 
 def process_log(data_dir: Path, log_id: str, output_dir: Path, n: Optional[int] = None) :
