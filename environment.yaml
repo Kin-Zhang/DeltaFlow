@@ -34,6 +34,8 @@ dependencies:
     - assets/cuda/chamfer3D
     - assets/cuda/mmcv
     - open3d==0.18.0
+    # - opencv-python-headless==4.9.0.80 # for av2 if there is any on cv2....
+    - av==14.0.1 # need to specific this one otherwise av2 will have error
     - av2==0.3.1
     - spconv-cu118==2.3.6
     - numpy==1.26.4

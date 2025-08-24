@@ -80,6 +80,7 @@ python -c "import torch; print(torch.__version__); print(torch.cuda.is_available
 python -c "import lightning.pytorch as pl; print(pl.__version__)"
 python -c "from assets.cuda.mmcv import Voxelization, DynamicScatter;print('successfully import on our lite mmcv package')"
 python -c "from assets.cuda.chamfer3D import nnChamferDis;print('successfully import on our chamfer3D package')"
+python -c "from av2.utils.io import read_feather; print('av2 package ok')"
 ```
 
 
