@@ -22,8 +22,9 @@ except ImportError as e:
     print(f"Detail error message\033[0m: {e}. Just ignore this warning if code runs without these models.")
 
 # following need install extra package: 
-# * pip install spconv-cu117
+# * pip install spconv-cu118
 try:
+    from .deltaflow import DeltaFlow
     from .flow4d import Flow4D
 except ImportError as e:
     print("\033[93m--- WARNING [model]: Model with SparseConv is not imported, as it requires spconv lib which is not installed.")
