@@ -9,7 +9,7 @@
 💞 If you find [*OpenSceneFlow*](https://github.com/KTH-RPL/OpenSceneFlow) useful to your research, please cite [**our works** 📖](#cite-us) and [give a star 🌟](https://github.com/KTH-RPL/OpenSceneFlow) as encouragement. (੭ˊ꒳​ˋ)੭✧
 
 OpenSceneFlow is a codebase for point cloud scene flow estimation. 
-It is also an official implementation of the following papers (sored by the time of publication):
+It is also an official implementation of the following papers (sorted by the time of publication):
 
 - **HiMo: High-Speed Objects Motion Compensation in Point Clouds** (SeFlow++)   
 *Qingwen Zhang, Ajinkya Khoche, Yi Yang, Li Ling, Sina Sharif Mansouri, Olov Andersson, Patric Jensfelt*  
@@ -101,7 +101,7 @@ If you prefer to build the Docker image by yourself, Check [build-docker-image](
 
 ## 1. Data Preparation
 
-Refer to [dataprocess/README.md](dataprocess/README.md) for dataset download instructions. Currently, we support **Argoverse 2**, **Waymo**, and **custom datasets** (more datasets will be added in the future). 
+Refer to [dataprocess/README.md](dataprocess/README.md) for dataset download instructions. Currently, we support **Argoverse 2**, **Waymo**, **nuScenes** and **custom datasets** (more datasets will be added in the future). 
 
 After downloading, convert the raw data to `.h5` format for easy training, evaluation, and visualization. Follow the steps in [dataprocess/README.md#process](dataprocess/README.md#process). 
 
