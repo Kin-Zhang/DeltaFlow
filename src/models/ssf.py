@@ -16,9 +16,9 @@ from .basic.sparse_unet import SimpleSparseUNet
 from .basic.encoder import DynamicVoxelizer
 from .basic.ssf_module import DynamicScatterVFE
 from .basic.decoder import SimpleLinearDecoder
-from .basic import cal_pose0to1
+from .basic import wrap_batch_pcs, BaseModel
 
-class SSF(nn.Module):
+class SSF(BaseModel):
     def __init__(self, voxel_size = [0.2, 0.2, 6],
                  point_cloud_range = [-51.2, -51.2, -3, 51.2, 51.2, 3],
                  grid_feature_size = [512, 512],
@@ -57,14 +57,6 @@ class SSF(nn.Module):
         self.timer = dztimer.Timing()
         self.timer.start("Total")
 
-    def load_from_checkpoint(self, ckpt_path):
-        ckpt = torch.load(ckpt_path, map_location="cpu")["state_dict"]
-        state_dict = {
-            k[len("model.") :]: v for k, v in ckpt.items() if k.startswith("model.")
-        }
-        print("\nLoading... model weight from: ", ckpt_path, "\n")
-        return self.load_state_dict(state_dict=state_dict, strict=False)
-
     def forward(self, batch):
         """
         input: using the batch from dataloader, which is a dict
@@ -72,31 +64,11 @@ class SSF(nn.Module):
         output: the predicted flow, pose_flow, and the valid point index of pc0
         """
         self.timer[0].start("Data Preprocess")
-        batch_sizes = len(batch["pose0"])
-
-        pose_flows = []
-        transform_pc0s = []
-        for batch_id in range(batch_sizes):
-            selected_pc0 = batch["pc0"][batch_id]
-            self.timer[0][0].start("pose")
-            with torch.no_grad():
-                if 'ego_motion' in batch:
-                    pose_0to1 = batch['ego_motion'][batch_id]
-                else:
-                    pose_0to1 = cal_pose0to1(batch["pose0"][batch_id], batch["pose1"][batch_id])
-            self.timer[0][0].stop()
-            
-            self.timer[0][1].start("transform")
-            # transform selected_pc0 to pc1
-            transform_pc0 = selected_pc0 @ pose_0to1[:3, :3].T + pose_0to1[:3, 3]
-            self.timer[0][1].stop()
-            pose_flows.append(transform_pc0 - selected_pc0)
-            transform_pc0s.append(transform_pc0)
-
-        pc0s = torch.stack(transform_pc0s, dim=0)
+        pcs_dict = wrap_batch_pcs(batch, num_frames=2)
+        pc0s = pcs_dict['pc0s']
         pc0s = torch.cat((pc0s, torch.ones((pc0s.size(0), pc0s.size(1),1)).to(pc0s.device) * 0.), dim=2)
         # indicator_pc0s = torch.ones((pc0s.size(0), pc0s.size(1),1), dtype=torch.int).to(pc0s.device) * 0
-        pc1s = batch["pc1"]
+        pc1s = pcs_dict['pc1s']
         pc1s = torch.cat((pc1s, torch.ones((pc1s.size(0), pc1s.size(1),1)).to(pc1s.device) * 1.), dim=2)
         # indicator_pc1s = torch.ones((pc1s.size(0), pc1s.size(1),1), dtype=torch.int).to(pc1s.device) * 1
         pcs_concat = torch.cat((pc0s, pc1s), dim=1)
@@ -152,11 +124,12 @@ class SSF(nn.Module):
         pc1_points_lst = [e["points"] for e in pc1_voxel_infos_lst]
 
         pc0_valid_point_idxes = [e["point_idxes"] for e in pc0_voxel_infos_lst]
-        pc1_valid_point_idxes = [e["point_idxes"] for e in pc1_voxel_infos_lst]
+        # since we concat in voxel_infos_dict
+        pc1_valid_point_idxes = [e["point_idxes"] - pc0s.shape[1] for e in pc1_voxel_infos_lst]
 
         model_res = {
             "flow": flows,
-            'pose_flow': pose_flows,
+            'pose_flow': pcs_dict['pose_flows'],
 
             "pc0_valid_point_idxes": pc0_valid_point_idxes,
             "pc0_points_lst": pc0_points_lst,

@@ -14,7 +14,7 @@
 import torch
 from torch.utils.data import DataLoader
 import lightning.pytorch as pl
-from lightning.pytorch.loggers import WandbLogger
+from lightning.pytorch.loggers import TensorBoardLogger
 from omegaconf import DictConfig, OmegaConf
 import hydra, wandb, os, sys
 from hydra.core.hydra_config import HydraConfig
@@ -45,21 +45,17 @@ def main(cfg):
     checkpoint_params = DictConfig(torch.load(cfg.checkpoint)["hyper_parameters"])
     cfg.output = checkpoint_params.cfg.output
     cfg.model.update(checkpoint_params.cfg.model)
+    cfg.num_frames = cfg.model.target.get('num_frames', checkpoint_params.cfg.get('num_frames', cfg.get('num_frames', 2)))
     mymodel = ModelWrapper.load_from_checkpoint(cfg.checkpoint, cfg=cfg, eval=True)
 
-    wandb_logger = WandbLogger(save_dir=output_dir,
-                               entity="kth-rpl",
-                               project=f"deflow-eval", 
-                               name=f"{cfg.output}",
-                               offline=True)
-    
-    trainer = pl.Trainer(logger=wandb_logger, devices=1)
+    logger = TensorBoardLogger(save_dir=output_dir, name="logs")
+
+    trainer = pl.Trainer(logger=logger, devices=1)
     # NOTE(Qingwen): search & check in pl_model.py : def test_step(self, batch, res_dict)
     trainer.test(model = mymodel, \
                  dataloaders = DataLoader(\
-                     HDF5Dataset(cfg.dataset_path, n_frames=checkpoint_params.cfg.num_frames if 'num_frames' in checkpoint_params.cfg else 2), \
+                     HDF5Dataset(cfg.dataset_path, n_frames=cfg.num_frames), \
                     batch_size=1, shuffle=False))
-    wandb.finish()
 
 if __name__ == "__main__":
     main()

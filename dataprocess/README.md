@@ -10,9 +10,9 @@ We've updated the process dataset for:
 
 - [x] Argoverse 2.0: check [here](#argoverse-20). The process script Involved from [DeFlow](https://github.com/KTH-RPL/DeFlow).
 - [x] Waymo: check [here](#waymo-dataset). The process script was involved from [SeFlow](https://github.com/KTH-RPL/SeFlow).
-- [ ] nuScenes: done coding, public after review. Will be involved later by another paper.
+- [x] nuScenes: check [here](#nuscenes), The process script was involved from [DeltaFlow](https://github.com/Kin-Zhang/DeltaFlow).
+- [x] ZOD (w/o gt): check [here](#zod-dataset). The process script was involved from [HiMo](https://kin-zhang.github.io/HiMo). (It could be a good first reference for users to extract other datasets in the future.)
 - [ ] TruckScene: done coding, public after review. Will be involved later by another paper.
-- [ ] ZOD (w/o gt): done coding, public after review. Will be involved later by another paper.
 
 If you want to **use all datasets above**, there is a **specific environment** in [envsftool.yaml](../envsftool.yaml) to install all the necessary packages. As Waymo package have different configuration and conflict with the main environment. Setup through the following command:
 
@@ -77,6 +77,20 @@ You need sign up an account at [nuScenes](https://www.nuscenes.org/) to download
 ![](../assets/docs/nuscenes.png)
 
 
+Extracting & processing nuScenes require special handling:
+
+* Frame Rate: The raw LiDAR data is captured at 20Hz, while ground truth (GT) annotations are only available at 2Hz.
+* Resampling: To standardize the data for consistent evaluation, we downsample the LiDAR point clouds to 10Hz. It is a GT-guided process that guarantees all annotated 2Hz frames are preserved within the final 10Hz sequence.
+* The ground truth scene flow is generated using the official per-object velocity labels provided in the dataset, calculated between the resampled 10Hz frames.
+
+
+#### Dataset frames
+
+| Dataset | # Total Scene | # Total Frames |
+| ------- | ------------- | -------------- |
+| train   | 700           | 137575 / 27392 (w. gt)         |
+| val     | 150           | 29126 / 5798 (w.gt)          |
+
 ### Waymo Dataset
 
 To download the Waymo dataset, you need to register an account at [Waymo Open Dataset](https://waymo.com/open/). You also need to install gcloud SDK and authenticate your account. Please refer to [this page](https://cloud.google.com/sdk/docs/install) for more details. 
@@ -109,27 +123,45 @@ tar -xvf waymo_map.tar.gz -C /home/kin/data/waymo/flowlabel
 | train   | 799           | 155687         |
 | val     | 203           | 39381          |
 
+### ZOD Dataset
+
+Although ZOD have the most dense LiDAR sensor (128-channel), the dataset itself **does not include ground truth flow**. 
+We provide the extraction script for Self-Supervised Learning (SSL) to train and visualize the results etc, again **no evaluation available** here.
+
+To download the ZOD dataset, you need follow [the instruction here](https://zod.zenseact.com/download/): send email and ask for the download from the team.
+
+For HiMo, we only downloaded [drives-set](https://zod.zenseact.com/drives/) for test purpose etc. The total drives-set includes 29 sequences (Total size: 303G). Here are [quick video play](https://www.bilibili.com/video/BV1Sh4y1z7v2) for each scene in the drives.
+
+Please check the scripts: [dataprocess/extract_zod.py](./extract_zod.py) in detail, current we only process one scene while feel free to comment out for all scene etc.
+
+
+
 ## Process
-This directory contains the scripts to preprocess the datasets. 
+
+This directory contains the scripts to preprocess the datasets into `.h5` files. 
 
 - `extract_av2.py`: Process the datasets in Argoverse 2.0.
 - `extract_nus.py`: Process the datasets in nuScenes.
 - `extract_waymo.py`: Process the datasets in Waymo.
+- `extract_zod.py`: Process the datasets in ZOD.
 
 Example Running command:
 ```bash
 # av2:
-python dataprocess/extract_av2.py --av2_type sensor --data_mode train --argo_dir /home/kin/data/av2 --output_dir /home/kin/data/av2/preprocess
+python dataprocess/extract_av2.py --av2_type sensor --data_mode train --argo_dir /home/kin/data/av2 --output_dir /home/kin/data/av2/h5py
 
 # waymo:
-python dataprocess/extract_waymo.py --mode train --flow_data_dir /home/kin/data/waymo/flowlabel --map_dir /home/kin/data/waymo/flowlabel/map --output_dir /home/kin/data/waymo/preprocess  --nproc 48
+python dataprocess/extract_waymo.py --mode train --flow_data_dir /home/kin/data/waymo/flowlabel --map_dir /home/kin/data/waymo/flowlabel/map --output_dir /home/kin/data/waymo/h5py  --nproc 48
+
+# nus:
+python dataprocess/extract_nus.py --mode v1.0-trainval --output_dir /home/kin/data/nus/h5py/full --nproc 24
 ```
 
 
 Extract all Argoverse 2.0 data to unified `.h5` format.
 [Runtime: Normally need 45 mins finished run following commands totally in setup mentioned in our paper]
 ```bash
-python dataprocess/extract_av2.py --av2_type sensor --data_mode train --argo_dir /home/kin/data/av2 --output_dir /home/kin/data/av2/preprocess_v2
+python dataprocess/extract_av2.py --av2_type sensor --data_mode train --argo_dir /home/kin/data/av2 --output_dir /home/kin/data/av2/h5py
 python dataprocess/extract_av2.py --av2_type sensor --data_mode val --mask_dir /home/kin/data/av2/3d_scene_flow
 python dataprocess/extract_av2.py --av2_type sensor --data_mode test --mask_dir /home/kin/data/av2/3d_scene_flow
 ```
@@ -158,9 +190,9 @@ Or you can run testing file to visualize the data.
 
 ```bash
 # view gt flow
-python tools/visualization.py --data_dir /home/kin/data/av2/preprocess/sensor/mini --res_name flow
+python tools/visualization.py --data_dir /home/kin/data/av2/h5py/sensor/mini --res_name flow
 
-python tools/visualization.py --data_dir /home/kin/data/waymo/preprocess/val --res_name flow
+python tools/visualization.py --data_dir /home/kin/data/waymo/h5py/val --res_name flow
 ```
 
 ### Self-Supervised Process
@@ -169,5 +201,5 @@ Process train data for self-supervised learning. Only training data needs this s
 [Runtime: Normally need 15 hours for my desktop, 3 hours for the cluster with five available nodes parallel running.]
 
 ```bash
-python process.py --data_dir /home/kin/data/av2/preprocess_v2/sensor/train --scene_range 0,701
+python process.py --data_dir /home/kin/data/av2/h5py/sensor/train --scene_range 0,701
 ```

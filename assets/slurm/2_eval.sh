@@ -5,29 +5,16 @@
 #SBATCH --output /proj/berzelius-2023-154/users/x_qinzh/seflow/logs/slurm/%J_eval.out
 #SBATCH --error  /proj/berzelius-2023-154/users/x_qinzh/seflow/logs/slurm/%J_eval.err
 
-cd /proj/berzelius-2023-154/users/x_qinzh/seflow
 
-SOURCE="/proj/berzelius-2023-154/users/x_qinzh/av2/preprocess_v2"
-DEST="/scratch/local/av2"
-SUBDIRS=("sensor/val")
+PYTHON=/proj/berzelius-2023-154/users/x_qinzh/mambaforge/envs/opensf/bin/python
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/proj/berzelius-2023-154/users/x_qinzh/mambaforge/lib
+cd /proj/berzelius-2023-364/users/x_qinzh/workspace/OpenSceneFlow
 
-start_time=$(date +%s)
-for dir in "${SUBDIRS[@]}"; do
-    mkdir -p "${DEST}/${dir}"
-    find "${SOURCE}/${dir}" -type f -print0 | xargs -0 -n1 -P16 cp -t "${DEST}/${dir}" &
-done
-wait
-end_time=$(date +%s)
-elapsed=$((end_time - start_time))
-echo "Copy ${SOURCE} to ${DEST} Total time: ${elapsed} seconds"
-echo "Start training..."
 
 # ====> leaderboard model
-# /proj/berzelius-2023-154/users/x_qinzh/mambaforge/envs/seflow/bin/python eval.py \
-#     wandb_mode=online dataset_path=/scratch/local/av2/sensor \
+# $PYTHON eval.py wandb_mode=online dataset_path=/proj/berzelius-2023-364/users/x_qinzh/data/av2/autolabel data_mode=test \
 #     checkpoint=/proj/berzelius-2023-154/users/x_qinzh/seflow/logs/wandb/seflow-10086990/checkpoints/epoch_19_seflow.ckpt \
-#     av2_mode=test save_res=True
+#     save_res=True
 
-/proj/berzelius-2023-154/users/x_qinzh/mambaforge/envs/seflow/bin/python eval.py \
-    wandb_mode=online dataset_path=/scratch/local/av2/sensor av2_mode=val \
+$PYTHON eval.py wandb_mode=online dataset_path=/proj/berzelius-2023-364/users/x_qinzh/data/av2/autolabel data_mode=val \
     checkpoint=/proj/berzelius-2023-154/users/x_qinzh/seflow/logs/wandb/seflow-10086990/checkpoints/epoch_19_seflow.ckpt
