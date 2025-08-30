@@ -3,9 +3,15 @@ from pkg_resources import DistributionNotFound, get_distribution, parse_version
 from setuptools import find_packages, setup
 from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 
+extra_compile_args = {
+    'cxx': ['-DCCCL_IGNORE_DEPRECATED_CUDA_BELOW_12'],
+    'nvcc': ['-DCCCL_IGNORE_DEPRECATED_CUDA_BELOW_12'],
+}
+
+
 setup(
     name='mmcv',
-    version='1.0.1',
+    version='1.0.2',
     ext_modules=[
         CUDAExtension(
             name='mmcv',
@@ -18,14 +24,8 @@ setup(
                 "/".join(__file__.split("/")[:-1] + ["pybind.cpp"]),
 
             ],
-            # extra_compile_args={
-            #     'cxx': ['-std=c++17'], 
-            #     'nvcc': ['-std=c++17',
-            #     '-D__CUDA_NO_HALF_OPERATORS__',
-            #     '-D__CUDA_NO_HALF_CONVERSIONS__',
-            #     '-D__CUDA_NO_HALF2_OPERATORS__',
-            #              ],}
-            ),
+            extra_compile_args=extra_compile_args
+        ),
     ],
     cmdclass={'build_ext': BuildExtension},
 

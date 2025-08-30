@@ -10,7 +10,7 @@
 import warnings
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
-from .deflow import DeFlow
+from .deflow import DeFlow, DeFlowPP
 from .fastflow3d import FastFlow3D
 from .nsfp import NSFP
 

@@ -12,7 +12,7 @@ import torch.nn as nn
 from .basic.unet import FastFlow3DUNet
 from .basic.encoder import DynamicEmbedder
 from .basic.decoder import LinearDecoder
-from .basic import cal_pose0to1, BaseModel
+from .basic import wrap_batch_pcs, BaseModel
 
 
 class FastFlow3D(BaseModel):
@@ -68,31 +68,15 @@ class FastFlow3D(BaseModel):
                 compute_symmetry_y=False):
 
         self.timer[0].start("Data Preprocess")
-        batch_sizes = len(batch["pose0"])
-
-        pose_flows = []
-        transform_pc0s = []
-        for batch_id in range(batch_sizes):
-            selected_pc0 = batch["pc0"][batch_id]
-            self.timer[0][0].start("pose")
-            pose_0to1 = cal_pose0to1(batch["pose0"][batch_id], batch["pose1"][batch_id])
-            self.timer[0][0].stop()
-            
-            self.timer[0][1].start("transform")
-            # transform selected_pc0 to pc1
-            transform_pc0 = selected_pc0 @ pose_0to1[:3, :3].T + pose_0to1[:3, 3]
-            self.timer[0][1].stop()
-            pose_flows.append(transform_pc0 - selected_pc0)
-            transform_pc0s.append(transform_pc0)
-
-        pc0s = torch.stack(transform_pc0s, dim=0)
-        pc1s = batch["pc1"]
+        pcs_dict = wrap_batch_pcs(batch, num_frames=2)
+        pc0s = pcs_dict['pc0s']
+        pc1s = pcs_dict['pc1s']
         self.timer[0].stop()
 
         model_res = self._model_forward(pc0s, pc1s)
 
         ret_dict = model_res
-        ret_dict["pose_flow"] = pose_flows
+        ret_dict["pose_flow"] = pcs_dict['pose_flows']
         if compute_cycle:
             # The warped pointcloud, original pointcloud should be the input to the model
             pc0_warped_pc1_points_lst = model_res["pc0_warped_pc1_points_lst"]

@@ -1,15 +1,25 @@
 from setuptools import setup
 from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 
+extra_compile_args = {
+    'cxx': ['-DCCCL_IGNORE_DEPRECATED_CUDA_BELOW_12'],
+    'nvcc': ['-DCCCL_IGNORE_DEPRECATED_CUDA_BELOW_12'],
+}
+
 setup(
     name='chamfer3D',
     ext_modules=[
-        CUDAExtension('chamfer3D', [
-            "/".join(__file__.split('/')[:-1] + ['chamfer3D_cuda.cpp']), # must named as xxx_cuda.cpp
-            "/".join(__file__.split('/')[:-1] + ['chamfer3D.cu']),
-        ]),
+        CUDAExtension(
+            name='chamfer3D',
+            sources=[
+                "/".join(__file__.split('/')[:-1] + ['chamfer3D_cuda.cpp']), # must named as xxx_cuda.cpp
+                "/".join(__file__.split('/')[:-1] + ['chamfer3D.cu']),
+            ],
+            extra_compile_args=extra_compile_args
+        ),
     ],
     cmdclass={
         'build_ext': BuildExtension
     },
-    version='1.0.1')
+    version='1.0.2'
+)

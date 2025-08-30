@@ -27,7 +27,7 @@ sys.path.append(BASE_DIR)
 from src.utils import import_func
 from src.utils.mics import weights_init, zip_res
 from src.utils.av2_eval import write_output_file
-from src.models.basic import cal_pose0to1
+from src.models.basic import cal_pose0to1, WarmupCosLR
 from src.utils.eval_metric import OfficialMetrics, evaluate_leaderboard, evaluate_leaderboard_v2, evaluate_ssf
 
 # debugging tools
@@ -39,7 +39,25 @@ class ModelWrapper(LightningModule):
     def __init__(self, cfg, eval=False):
         super().__init__()
 
-        # set grid size
+        default_self_values = {
+            "batch_size": 1,
+            "lr": 2e-4,
+            "epochs": 3,
+            "loss_fn": 'deflowLoss',
+            "add_seloss": None,
+            "checkpoint": None,
+            "leaderboard_version": 2,
+            "supervised_flag": True,
+            "save_res": False,
+            "res_name": "default",
+            "num_frames": 2,
+            "optimizer": None,
+            "dataset_path": None,
+            "data_mode": None,
+        }
+        for key, default in default_self_values.items():
+            setattr(self, key, cfg.get(key, default))
+
         if ('voxel_size' in cfg.model.target) and ('point_cloud_range' in cfg.model.target) and not eval and 'point_cloud_range' in cfg:
             OmegaConf.set_struct(cfg.model.target, True)
             with open_dict(cfg.model.target):
@@ -54,45 +72,33 @@ class ModelWrapper(LightningModule):
                     abs(int((cfg.model.target.point_cloud_range[1] - cfg.model.target.point_cloud_range[4]) / cfg.model.target.voxel_size[1])),
                     abs(int((cfg.model.target.point_cloud_range[2] - cfg.model.target.point_cloud_range[5]) / cfg.model.target.voxel_size[2]))]
         
+        # ---> model
+        self.point_cloud_range = cfg.model.target.point_cloud_range
         self.model = instantiate(cfg.model.target)
         self.model.apply(weights_init)
-        
+        if 'pretrained_weights' in cfg and cfg.pretrained_weights is not None:
+            missing_keys, unexpected_keys = self.model.load_from_checkpoint(cfg.pretrained_weights)
+        # print(f"Model: {self.model.__class__.__name__}, Number of Frames: {self.num_frames}")
+
+        # ---> loss fn
         self.loss_fn = import_func("src.lossfuncs."+cfg.loss_fn) if 'loss_fn' in cfg else None
-        self.add_seloss = cfg.add_seloss if 'add_seloss' in cfg else None
-        self.cfg_loss_name = cfg.loss_fn if 'loss_fn' in cfg else None
+        self.cfg_loss_name = cfg.get("loss_fn", None)
         
-        self.batch_size = int(cfg.batch_size) if 'batch_size' in cfg else 1
-        self.lr = cfg.lr if 'lr' in cfg else None
-        self.lr_scheduler = cfg.lr_scheduler if 'lr_scheduler' in cfg else None
-        self.epochs = cfg.epochs if 'epochs' in cfg else None
-        
+        # ---> evaluation metric
         self.metrics = OfficialMetrics()
 
-        self.load_checkpoint_path = cfg.checkpoint if 'checkpoint' in cfg else None
+        # ---> inference mode
+        if self.save_res and self.data_mode in ['val', 'valid', 'test']:
+            self.save_res_path = Path(cfg.dataset_path).parent / "results" / cfg.output
+            os.makedirs(self.save_res_path, exist_ok=True)
+            print(f"We are in {cfg.data_mode}, results will be saved in: {self.save_res_path} with version: {self.leaderboard_version} format for online leaderboard.")
 
-
-        self.leaderboard_version = cfg.leaderboard_version if 'leaderboard_version' in cfg else 1
-        # NOTE(Qingwen): since we have seflow version which is unsupervised, we need to set the flag to false.
-        self.supervised_flag = cfg.supervised_flag if 'supervised_flag' in cfg else True
-        self.save_res = False
-        if 'av2_mode' in cfg:
-            self.av2_mode = cfg.av2_mode
-            self.save_res = cfg.save_res if 'save_res' in cfg else False
-            
-            if self.save_res or self.av2_mode == 'test':
-                self.save_res_path = Path(cfg.dataset_path).parent / "results" / cfg.output
-                os.makedirs(self.save_res_path, exist_ok=True)
-                print(f"We are in {cfg.av2_mode}, results will be saved in: {self.save_res_path} with version: {self.leaderboard_version} format for online leaderboard.")
-        else:
-            self.av2_mode = None
-            if 'pretrained_weights' in cfg:
-                if cfg.pretrained_weights is not None:
-                    self.model.load_from_checkpoint(cfg.pretrained_weights)
-
-        self.dataset_path = cfg.dataset_path if 'dataset_path' in cfg else None
-        self.vis_name = cfg.res_name if 'res_name' in cfg else 'default'
+        # self.test_total_num = 0
+        if self.data_mode in ['val', 'valid', 'test']:
+            print(cfg)
         self.save_hyperparameters()
 
+    # FIXME(Qingwen 2025-08-20): update the loss_calculation fn alone to make all things pretty here....
     def training_step(self, batch, batch_idx):
         self.model.timer[4].start("One Scan in model")
         res_dict = self.model(batch)
@@ -102,7 +108,7 @@ class ModelWrapper(LightningModule):
         # compute loss
         total_loss = 0.0
 
-        if self.cfg_loss_name in ['seflowLoss']:
+        if self.cfg_loss_name in ['seflowLoss', 'seflowppLoss']:
             loss_items, weights = zip(*[(key, weight) for key, weight in self.add_seloss.items()])
             loss_logger = {'chamfer_dis': 0.0, 'dynamic_chamfer_dis': 0.0, 'static_flow_loss': 0.0, 'cluster_based_pc0pc1': 0.0}
         else:
@@ -131,11 +137,15 @@ class ModelWrapper(LightningModule):
             if 'pc0_dynamic' in batch:
                 dict2loss['pc0_labels'] = batch['pc0_dynamic'][batch_id][pc0_valid_from_pc2res]
                 dict2loss['pc1_labels'] = batch['pc1_dynamic'][batch_id][pc1_valid_from_pc2res]
+            if 'pch1_dynamic' in batch and 'pch1_valid_point_idxes' in res_dict:
+                dict2loss['pch1_labels'] = batch['pch1_dynamic'][batch_id][res_dict['pch1_valid_point_idxes'][batch_id]]
 
             # different methods may don't have this in the res_dict
             if 'pc0_points_lst' in res_dict and 'pc1_points_lst' in res_dict:
                 dict2loss['pc0'] = pc0_points_lst[batch_id]
                 dict2loss['pc1'] = pc1_points_lst[batch_id]
+            if 'pch1_points_lst' in res_dict:
+                dict2loss['pch1'] = res_dict['pch1_points_lst'][batch_id]
 
             res_loss = self.loss_fn(dict2loss)
             for i, loss_name in enumerate(loss_items):
@@ -144,7 +154,7 @@ class ModelWrapper(LightningModule):
                 loss_logger[key] += res_loss[key]
 
         self.log("trainer/loss", total_loss/batch_sizes, sync_dist=True, batch_size=self.batch_size, prog_bar=True)
-        if self.add_seloss is not None and self.cfg_loss_name in ['seflowLoss']:
+        if self.add_seloss is not None and self.cfg_loss_name in ['seflowLoss', 'seflowppLoss']:
             for key in loss_logger:
                 self.log(f"trainer/{key}", loss_logger[key]/batch_sizes, sync_dist=True, batch_size=self.batch_size)
         self.model.timer[5].stop()
@@ -173,14 +183,22 @@ class ModelWrapper(LightningModule):
             pass
 
     def configure_optimizers(self):
-        if self.lr is None:
-            optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
-            return optimizer
-        elif self.lr_scheduler == 'step':
-            optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
-            lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=self.trainer.max_epochs//2, gamma=0.1)
-            return {'optimizer': optimizer,
-                    'lr_scheduler': lr_scheduler}
+        optimizers_ = {}
+        # default Adam
+        if self.optimizer.name == "AdamW":
+            optimizers_['optimizer'] = optim.AdamW(self.model.parameters(), lr=self.optimizer.lr, weight_decay=self.optimizer.get("weight_decay", 1e-4))
+        else: # if self.optimizer.name == "Adam":
+            optimizers_['optimizer'] = optim.Adam(self.model.parameters(), lr=self.optimizer.lr)
+
+        if "scheduler" in self.optimizer:
+            if self.optimizer.scheduler.name == "WarmupCosLR":
+                optimizers_['lr_scheduler'] = WarmupCosLR(optimizers_['optimizer'], self.optimizer.scheduler.get("min_lr", self.optimizer.lr*0.1), \
+                                        self.optimizer.lr, self.optimizer.scheduler.get("warmup_epochs", 1), self.epochs)
+            elif self.optimizer.scheduler.name == "StepLR":
+                optimizers_['lr_scheduler'] = optim.lr_scheduler.StepLR(optimizers_['optimizer'], step_size=self.optimizer.scheduler.get("step_size", self.trainer.max_epochs//3), \
+                                        gamma=self.optimizer.scheduler.get("gamma", 0.1))
+
+        return optimizers_
 
     def on_train_epoch_start(self):
         self.time_start_train_epoch = time.time()
@@ -191,8 +209,8 @@ class ModelWrapper(LightningModule):
     def on_validation_epoch_end(self):
         self.model.timer.print(random_colors=False, bold=False)
 
-        if self.av2_mode == 'test':
-            print(f"\nModel: {self.model.__class__.__name__}, Checkpoint from: {self.load_checkpoint_path}")
+        if self.data_mode == 'test':
+            print(f"\nModel: {self.model.__class__.__name__}, Checkpoint from: {self.checkpoint}")
             print(f"Test results saved in: {self.save_res_path}, Please run submit command and upload to online leaderboard for results.")
             if self.leaderboard_version == 1:
                 print(f"\nevalai challenge 2010 phase 4018 submit --file {self.save_res_path}.zip --large --private\n")
@@ -204,9 +222,9 @@ class ModelWrapper(LightningModule):
             # wandb.log_artifact(output_file)
             return
         
-        if self.av2_mode == 'val':
-            print(f"\nModel: {self.model.__class__.__name__}, Checkpoint from: {self.load_checkpoint_path}")
-            print(f"More details parameters and training status are in checkpoints")        
+        if self.data_mode == 'val':
+            print(f"\nModel: {self.model.__class__.__name__}, Checkpoint from: {self.checkpoint}")
+            print(f"More details parameters and training status are in the checkpoint file.")        
 
         self.metrics.normalize()
 
@@ -223,8 +241,8 @@ class ModelWrapper(LightningModule):
             # Save the dictionaries to a pickle file
             with open(str(self.save_res_path)+'.pkl', 'wb') as f:
                 pickle.dump((self.metrics.epe_3way, self.metrics.bucketed, self.metrics.epe_ssf), f)
-            print(f"We already write the {self.vis_name} into the dataset, please run following commend to visualize the flow. Copy and paste it to your terminal:")
-            print(f"python tools/visualization.py --res_name '{self.vis_name}' --data_dir {self.dataset_path}")
+            print(f"We already write the {self.res_name} into the dataset, please run following commend to visualize the flow. Copy and paste it to your terminal:")
+            print(f"python tools/visualization.py --res_name '{self.res_name}' --data_dir {self.dataset_path}")
             print(f"Enjoy! ^v^ ------ \n")
 
         self.metrics = OfficialMetrics()
@@ -247,7 +265,7 @@ class ModelWrapper(LightningModule):
         else:
             final_flow[~batch['gm0']] = res_dict['flow'] + pose_flow[~batch['gm0']]
 
-        if self.av2_mode == 'val': # since only val we have ground truth flow to eval
+        if self.data_mode == 'val': # since only val we have ground truth flow to eval
             gt_flow = batch["flow"]
             v1_dict = evaluate_leaderboard(final_flow[eval_mask], pose_flow[eval_mask], pc0[eval_mask], \
                                        gt_flow[eval_mask], batch['flow_is_valid'][eval_mask], \
@@ -259,7 +277,7 @@ class ModelWrapper(LightningModule):
             self.metrics.step(v1_dict, v2_dict, ssf_dict)
         
         # NOTE (Qingwen): Since val and test, we will force set batch_size = 1 
-        if self.save_res or self.av2_mode == 'test': # test must save data to submit in the online leaderboard.    
+        if self.save_res or self.data_mode == 'test': # test must save data to submit in the online leaderboard.    
             save_pred_flow = final_flow[eval_mask, :3].cpu().detach().numpy()
             rigid_flow = pose_flow[eval_mask, :3].cpu().detach().numpy()
             is_dynamic = np.linalg.norm(save_pred_flow - rigid_flow, axis=1, ord=2) >= 0.05
@@ -273,8 +291,10 @@ class ModelWrapper(LightningModule):
         batch['origin_pc0'] = batch['pc0'].clone()
         batch['pc0'] = batch['pc0'][~batch['gm0']].unsqueeze(0)
         batch['pc1'] = batch['pc1'][~batch['gm1']].unsqueeze(0)
-        if 'pcb0' in batch:
-            batch['pcb0'] = batch['pcb0'][~batch['gmb0']].unsqueeze(0)
+        
+        for i in range(1, self.num_frames-1):
+            batch[f'pch{i}'] = batch[f'pch{i}'][~batch[f'gmh{i}']].unsqueeze(0)
+
         self.model.timer[12].start("One Scan")
         res_dict = self.model(batch)
         self.model.timer[12].stop()
@@ -285,7 +305,7 @@ class ModelWrapper(LightningModule):
         return batch, res_dict
     
     def validation_step(self, batch, batch_idx):
-        if self.av2_mode == 'val' or self.av2_mode == 'test':
+        if self.data_mode in ['val', 'test']:
             batch, res_dict = self.run_model_wo_ground_data(batch)
             self.model.timer[13].start("Eval")
             self.eval_only_step_(batch, res_dict)
@@ -317,13 +337,13 @@ class ModelWrapper(LightningModule):
         key = str(batch['timestamp'])
         scene_id = batch['scene_id']
         with h5py.File(os.path.join(self.dataset_path, f'{scene_id}.h5'), 'r+') as f:
-            if self.vis_name in f[key]:
-                del f[key][self.vis_name]
-            f[key].create_dataset(self.vis_name, data=final_flow.cpu().detach().numpy().astype(np.float32))
+            if self.res_name in f[key]:
+                del f[key][self.res_name]
+            f[key].create_dataset(self.res_name, data=final_flow.cpu().detach().numpy().astype(np.float32))
 
     def on_test_epoch_end(self):
         self.model.timer.print(random_colors=False, bold=False)
-        print(f"\n\nModel: {self.model.__class__.__name__}, Checkpoint from: {self.load_checkpoint_path}")
+        print(f"\n\nModel: {self.model.__class__.__name__}, Checkpoint from: {self.checkpoint}")
         print(f"We already write the flow_est into the dataset, please run following commend to visualize the flow. Copy and paste it to your terminal:")
-        print(f"python tools/visualization.py --res_name '{self.vis_name}' --data_dir {self.dataset_path}")
+        print(f"python tools/visualization.py --res_name '{self.res_name}' --data_dir {self.dataset_path}")
         print(f"Enjoy! ^v^ ------ \n")

@@ -14,14 +14,18 @@
 
 import torch
 from torch.utils.data import Dataset, DataLoader
-import h5py, os, pickle, argparse, sys
+import h5py, pickle, argparse
 from tqdm import tqdm
+
+import os, sys
 BASE_DIR = os.path.abspath(os.path.join( os.path.dirname( __file__ ), '..' ))
 sys.path.append(BASE_DIR)
+from src.utils import import_func
 
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
+# FIXME(Qingwen 2025-08-20): update more pretty here afterward!
 def collate_fn_pad(batch):
 
     num_frames = 2
@@ -73,27 +77,38 @@ def collate_fn_pad(batch):
         pc1_dynamic_after_mask_ground = torch.nn.utils.rnn.pad_sequence(pc1_dynamic_after_mask_ground, batch_first=True, padding_value=0)
         res_dict['pc0_dynamic'] = pc0_dynamic_after_mask_ground
         res_dict['pc1_dynamic'] = pc1_dynamic_after_mask_ground
+    if 'pch1_dynamic' in batch[0]:
+        pch1_dynamic_after_mask_ground = []
+        for i in range(len(batch)):
+            pch1_dynamic_after_mask_ground.append(batch[i]['pch1_dynamic'][~batch[i]['gmh1']])
+        pch1_dynamic_after_mask_ground = torch.nn.utils.rnn.pad_sequence(pch1_dynamic_after_mask_ground, batch_first=True, padding_value=0)
+        res_dict['pch1_dynamic'] = pch1_dynamic_after_mask_ground
 
     return res_dict
+
 class HDF5Dataset(Dataset):
-    def __init__(self, directory, n_frames=2, dufo=False, eval = False, leaderboard_version=1):
+    def __init__(self, directory, n_frames=2, ssl_label=None, eval = False, leaderboard_version=1):
         '''
-        directory: the directory of the dataset
-        n_frames: the number of frames we use, default is 2: current, next if more then it's the history from current.
-        dufo: if True, we will read the dynamic cluster label
-        eval: if True, use the eval index
+        Args:
+            directory: the directory of the dataset, the folder should contain some .h5 file and index_total.pkl.
+
+            Following are optional:
+            * n_frames: the number of frames we use, default is 2: from pc0 to pc1.
+            * ssl_label: if not None, we will use this label for self-supervised learning
+            * eval: if True, use the eval index
+            * leaderboard_version: 1st or 2nd, default is 1. If '2', we will use the index_eval_v2.pkl from assets/docs.
         '''
         super(HDF5Dataset, self).__init__()
         self.directory = directory
         
         if (torch.distributed.is_initialized() and torch.distributed.get_rank() == 0) or not torch.distributed.is_initialized():
-            print(f"----[Debug] Loading data with num_frames={n_frames}, eval={eval}, leaderboard_version={leaderboard_version}")
+            print(f"----[Debug] Loading data with num_frames={n_frames}, ssl_label={ssl_label}, eval={eval}, leaderboard_version={leaderboard_version}")
         with open(os.path.join(self.directory, 'index_total.pkl'), 'rb') as f:
             self.data_index = pickle.load(f)
 
         self.eval_index = False
-        self.dufo = dufo
-        self.n_frames = n_frames
+        self.ssl_label = import_func(f"src.autolabel.{ssl_label}") if ssl_label is not None else None
+        self.history_frames = n_frames - 2
 
         if eval:
             eval_index_file = os.path.join(self.directory, 'index_eval.pkl')
@@ -165,11 +180,10 @@ class HDF5Dataset(Dataset):
                 'pose1': pose1,
             }
 
-            if self.n_frames > 2: 
+            if self.history_frames > 0:
                 past_frames = []
-                num_past_frames = self.n_frames - 2  
 
-                for i in range(1, num_past_frames + 1):
+                for i in range(1, self.history_frames + 1):
                     frame_index = index_ - i
                     if frame_index < self.scene_id_bounds[scene_id]["min_index"]: 
                         frame_index = self.scene_id_bounds[scene_id]["min_index"] 
@@ -179,12 +193,14 @@ class HDF5Dataset(Dataset):
                     past_gm = torch.tensor(f[past_timestamp]['ground_mask'][:])
                     past_pose = torch.tensor(f[past_timestamp]['pose'][:])
 
-                    past_frames.append((past_pc, past_gm, past_pose))
+                    past_frames.append((past_pc, past_gm, past_pose, past_timestamp))
 
-                for i, (past_pc, past_gm, past_pose) in enumerate(past_frames):
+                for i, (past_pc, past_gm, past_pose, past_timestamp) in enumerate(past_frames):
                     res_dict[f'pch{i+1}'] = past_pc
                     res_dict[f'gmh{i+1}'] = past_gm
                     res_dict[f'poseh{i+1}'] = past_pose
+                    if self.ssl_label is not None:
+                        res_dict[f'pch{i+1}_dynamic'] = torch.tensor(self.ssl_label(f[past_timestamp]).astype('int16'))
 
             if 'flow' in f[key]:
                 flow = torch.tensor(f[key]['flow'][:])
@@ -198,9 +214,9 @@ class HDF5Dataset(Dataset):
                 ego_motion = torch.tensor(f[key]['ego_motion'][:])
                 res_dict['ego_motion'] = ego_motion
 
-            if self.dufo:
-                res_dict['pc0_dynamic'] = torch.tensor(f[key]['label'][:].astype('int16'))
-                res_dict['pc1_dynamic'] = torch.tensor(f[next_timestamp]['label'][:].astype('int16'))
+            if self.ssl_label is not None:
+                res_dict['pc0_dynamic'] = torch.tensor(self.ssl_label(f[key]).astype('int16'))
+                res_dict['pc1_dynamic'] = torch.tensor(self.ssl_label(f[next_timestamp]).astype('int16'))
 
             if self.eval_index:
                 # looks like v2 not follow the same rule as v1 with eval_mask provided

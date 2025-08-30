@@ -29,8 +29,8 @@ from src.dataset import HDF5Dataset, collate_fn_pad
 from src.trainer import ModelWrapper
 
 def precheck_cfg_valid(cfg):
-    if cfg.loss_fn == 'seflowLoss' and cfg.add_seloss is None:
-        raise ValueError("Please specify the self-supervised loss items for seflowLoss.")
+    if cfg.loss_fn in ['seflowLoss', 'seflowppLoss'] and (cfg.add_seloss is None or cfg.ssl_label is None):
+        raise ValueError("Please specify the self-supervised loss items and auto-label source for seflow-series loss.")
     
     grid_size = [(cfg.point_cloud_range[3] - cfg.point_cloud_range[0]) * (1/cfg.voxel_size[0]),
                  (cfg.point_cloud_range[4] - cfg.point_cloud_range[1]) * (1/cfg.voxel_size[1]),
@@ -57,7 +57,7 @@ def main(cfg):
     precheck_cfg_valid(cfg)
     pl.seed_everything(cfg.seed, workers=True)
 
-    train_dataset = HDF5Dataset(cfg.train_data, n_frames=cfg.num_frames, dufo=(cfg.loss_fn == 'seflowLoss'))
+    train_dataset = HDF5Dataset(cfg.train_data, n_frames=cfg.num_frames, ssl_label=cfg.get('ssl_label', None))
     train_loader = DataLoader(train_dataset,
                               batch_size=cfg.batch_size,
                               shuffle=True,
@@ -76,10 +76,11 @@ def main(cfg):
 
     output_dir = HydraConfig.get().runtime.output_dir
     # overwrite logging folder name for SSL.
-    if cfg.loss_fn == 'seflowLoss':
-        cfg.output = cfg.output.replace(cfg.model.name, "seflow")
-        output_dir = output_dir.replace(cfg.model.name, "seflow")
-        method_name = "seflow"
+    if cfg.loss_fn in ['seflowLoss', 'seflowppLoss']:
+        tmp_ = cfg.loss_fn.split('Loss')[0] + '-' + cfg.model.name
+        cfg.output = cfg.output.replace(cfg.model.name, tmp_)
+        output_dir = output_dir.replace(cfg.model.name, tmp_)
+        method_name = tmp_
     else:
         method_name = cfg.model.name
 
@@ -133,14 +134,15 @@ def main(cfg):
         print("Initiating wandb and trainer successfully.  ^V^ ")
         print(f"We will use {cfg.gpus} GPUs to train the model. Check the checkpoints in {output_dir} checkpoints folder.")
         print("Total Train Dataset Size: ", len(train_dataset))
-        if cfg.add_seloss is not None and cfg.loss_fn == 'seflowLoss':
+        if cfg.get('add_seloss', None) is not None and cfg.loss_fn in ['seflowLoss', 'seflowppLoss']:
             print(f"Note: We are in **self-supervised** training now. No ground truth label is used.")
             print(f"We will use these loss items in {cfg.loss_fn}: {cfg.add_seloss}")
         print("-"*40+"\n")
 
     # NOTE(Qingwen): search & check: def training_step(self, batch, batch_idx)
     trainer.fit(model, train_dataloaders = train_loader, val_dataloaders = val_loader, ckpt_path = cfg.checkpoint)
-    wandb.finish()
+    if cfg.wandb_mode != "disabled":
+        wandb.finish()
 
 if __name__ == "__main__":
     main()
