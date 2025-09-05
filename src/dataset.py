@@ -20,14 +20,14 @@
 
 import torch, re
 from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
-import h5py, os, pickle, argparse, sys, random
+import h5py, pickle, argparse
 from tqdm import tqdm
 import numpy as np
-from src.utils import import_func
 
+import os, sys
 BASE_DIR = os.path.abspath(os.path.join( os.path.dirname( __file__ ), '..' ))
 sys.path.append(BASE_DIR)
+from src.utils import import_func
 
 def extract_flow_number(key):
     digits = re.findall(r'\d+$', key)
@@ -35,6 +35,7 @@ def extract_flow_number(key):
         return digits[0]
     return '0'
 
+# FIXME(Qingwen 2025-08-20): update more pretty here afterward!
 def collate_fn_pad(batch):
     batch_size_ = len(batch)
     pcs_after_mask_ground, poses_dict, flows_after_mask_ground = {}, {}, {}
@@ -180,7 +181,7 @@ class ToTensor(object):
             else:
                 print(f"Warning: {key} is not a numpy array. Type: {type(data_dict[key])}")
         return data_dict
-    
+
 class HDF5Dataset(Dataset):
     def __init__(self, directory, \
                 transform=None, n_frames=2, ssl_label=None, \

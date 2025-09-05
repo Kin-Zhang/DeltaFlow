@@ -20,6 +20,7 @@ Stay tuned and feel free to star ⭐ this repository to get notified when we pub
 - 2025/08/24: I'm updating some codes for early release. 
 - [x] 2025/08/24: Updating train data augmentation as illustrated in the DeltaFlow paper.
 - [x] 2025/08/25: Updating paper preprint link.
+- [x] 2025/09/05: Merged the latest commit from OpenSceneFlow codebase to DeltaFlow for afterward unified merged.
 - [ ] DeltaFlow Model python file.
 - [ ] pre-trained weights upload.
 - [ ] DeltaFlow Loss fn.
