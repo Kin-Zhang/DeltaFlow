@@ -15,8 +15,8 @@ Note (2025/09/18): We got accepted by NeurIPS 2025 and it's **spotlighted**! ðŸŽ
 - [x] 2025/08/25: Updating paper preprint link.
 - [x] 2025/09/05: Merged the latest commit from OpenSceneFlow codebase to DeltaFlow for afterward unified merged.
 - [x] 2025/09/25: DeltaFlow Model file, config file and loss function. Update quick training example.
-- [ ] pre-trained weights upload.
-- [ ] Merged into [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow)
+- [ ] pre-trained weights upload. Trying hard to find which one I used as tooo many ckpt files in my disk...
+- [ ] Merged into [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow), check pull request here: https://github.com/KTH-RPL/OpenSceneFlow/pull/21
 
 ## Quick Run
 
@@ -43,19 +43,15 @@ python eval.py checkpoint=${path_to_pretrained_weights} dataset_path=${demo_data
 ```
 
 ### Visualization
+
 Please refer to the [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow/tree/main?tab=readme-ov-file#4-visualization) for visualization instructions.
 
+While I will update a unified visualization script for OpenSceneFlow to quickly save all window views as images at the same view and same time etc. (Free us from qualitative figure making work!)
 
 
 
 ## Cite & Acknowledgements
 ```
-@article{zhang2025deltaflow,
-    title={{DeltaFlow}: An Efficient Multi-frame Scene Flow Estimation Method},
-    author={Zhang, Qingwen and Zhu, Xiaomeng and Zhang, Yushan and Cai, Yixi and Andersson, Olov and Jensfelt, Patric},
-    year={2025},
-    journal={arXiv preprint arXiv:2508.17054},
-}
 @article{zhang2025deltaflow,
     title={{DeltaFlow}: An Efficient Multi-frame Scene Flow Estimation Method},
     author={Zhang, Qingwen and Zhu, Xiaomeng and Zhang, Yushan and Cai, Yixi and Andersson, Olov and Jensfelt, Patric},
