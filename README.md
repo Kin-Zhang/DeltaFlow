@@ -1,4 +1,4 @@
-DeltaFlow
+DeltaFlow: An Efficient Multi-frame Scene Flow Estimation Method
 ---
 
 [![arXiv](https://img.shields.io/badge/arXiv-2508.17054-b31b1b?logo=arxiv&logoColor=white)](https://arxiv.org/abs/2508.17054)
@@ -14,9 +14,8 @@ Note (2025/09/18): We got accepted by NeurIPS 2025 and it's **spotlighted**! ðŸŽ
 - [x] 2025/08/24: Updating train data augmentation as illustrated in the DeltaFlow paper.
 - [x] 2025/08/25: Updating paper preprint link.
 - [x] 2025/09/05: Merged the latest commit from OpenSceneFlow codebase to DeltaFlow for afterward unified merged.
-- [x] 2025/09/25: DeltaFlow Model python file and config file.
+- [x] 2025/09/25: DeltaFlow Model file, config file and loss function. Update quick training example.
 - [ ] pre-trained weights upload.
-- [ ] DeltaFlow Loss fn.
 - [ ] Merged into [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow)
 
 ## Quick Run
@@ -34,7 +33,7 @@ unzip demo-data-v2.zip -d /home/kin/data/av2/h5py # to your data path
 
 3. Run the training with the following command (modify the data path accordingly):
 ```bash
-python train.py model=deltaflow batch_size=4 num_frames=5 voxel_size="[0.15,0.15,0.15]" point_cloud_range="[-38.4,-38.4,-3,38.4,38.4,3]" optimizer.lr=2e-4 train_data=${demo_train_data_path} val_data=${demo_val_data_path}
+python train.py model=deltaflow loss_fn=deltaflowLoss batch_size=4 num_frames=5 voxel_size="[0.15,0.15,0.15]" point_cloud_range="[-38.4,-38.4,-3,38.4,38.4,3]" optimizer.lr=2e-4 train_data=${demo_train_data_path} val_data=${demo_val_data_path}
 ```
 ### Evaluation
 
