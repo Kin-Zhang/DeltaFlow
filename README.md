@@ -57,5 +57,11 @@ Please refer to the [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow/tre
     year={2025},
     journal={arXiv preprint arXiv:2508.17054},
 }
+@article{zhang2025deltaflow,
+    title={{DeltaFlow}: An Efficient Multi-frame Scene Flow Estimation Method},
+    author={Zhang, Qingwen and Zhu, Xiaomeng and Zhang, Yushan and Cai, Yixi and Andersson, Olov and Jensfelt, Patric},
+    year={2025},
+    journal={arXiv preprint arXiv:2508.17054},
+}
 ```
 This work was partially supported by the Wallenberg AI, Autonomous Systems and Software Program (WASP) funded by the Knut and Alice Wallenberg Foundation and Prosense (2020-02963) funded by Vinnova. 
