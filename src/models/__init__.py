@@ -22,7 +22,7 @@ except ImportError as e:
     print(f"Detail error message\033[0m: {e}. Just ignore this warning if code runs without these models.")
 
 # following need install extra package: 
-# * pip install spconv-cu118
+# * pip install spconv-cu117
 try:
     from .deltaflow import DeltaFlow
     from .flow4d import Flow4D

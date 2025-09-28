@@ -267,15 +267,17 @@ def _run_process(cfg, mode):
                     final_metrics.epe_3way[key].extend(val_list)
 
                 for class_idx, class_name in enumerate(metrics_obj.bucketedMatrix.class_names):
-                    for range_idx, range_bucket in enumerate(metrics_obj.bucketedMatrix.range_buckets):
-                        count = metrics_obj.bucketedMatrix.count_storage_matrix[class_idx, range_idx]
+                    # NOTE(Qingwen): for bucketedMatrix range_buckets = speed_buckets
+                    for speed_idx, speed_bucket in enumerate(metrics_obj.bucketedMatrix.range_buckets):
+                        count = metrics_obj.bucketedMatrix.count_storage_matrix[class_idx, speed_idx]
                         if count > 0:
-                            avg_epe = metrics_obj.bucketedMatrix.epe_storage_matrix[class_idx, range_idx]
-                            avg_range = metrics_obj.bucketedMatrix.range_storage_matrix[class_idx, range_idx]
+                            avg_epe = metrics_obj.bucketedMatrix.epe_storage_matrix[class_idx, speed_idx]
+                            avg_speed = metrics_obj.bucketedMatrix.range_storage_matrix[class_idx, speed_idx]
                             final_metrics.bucketedMatrix.accumulate_value(
-                                class_name, range_bucket, avg_epe, avg_range, count
+                                class_name, speed_bucket, avg_epe, avg_speed, count
                             )
                 for class_idx, class_name in enumerate(metrics_obj.distanceMatrix.class_names):
+                    # NOTE(Qingwen): for distanceMatrix range_buckets = distance_buckets
                     for range_idx, range_bucket in enumerate(metrics_obj.distanceMatrix.range_buckets):
                         count = metrics_obj.distanceMatrix.count_storage_matrix[class_idx, range_idx]
                         if count > 0:
@@ -304,7 +306,7 @@ def _spawn_wrapper(rank, world_size, cfg, mode):
     os.environ['RANK'] = str(rank)
     os.environ['WORLD_SIZE'] = str(world_size)
     os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = cfg.get('master_port', '12355')
+    os.environ['MASTER_PORT'] = str(cfg.get('master_port', 12355))
     _run_process(cfg, mode)
 
 def launch_runner(cfg, mode):

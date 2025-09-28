@@ -6,6 +6,8 @@ DeltaFlow: An Efficient Multi-frame Scene Flow Estimation Method
 <!-- [![poster](https://img.shields.io/badge/ECCV24|Poster-6495ed?style=flat&logo=Shotcut&logoColor=wihte)](https://hkustconnect-my.sharepoint.com/:b:/g/personal/qzhangcb_connect_ust_hk/EWyWD-tAX4xIma5U7ZQVk9cBVjsFv0Y_jAC2G7xAB-w4cg?e=c3FbMg)  -->
 <!-- [![video](https://img.shields.io/badge/video-YouTube-FF0000?logo=youtube&logoColor=white)](https://youtu.be/fQqx2IES-VI) -->
 
+<img width="1864" height="756" alt="deltaflow_cover" src="https://github.com/user-attachments/assets/a7348910-8073-4703-8c0b-57c613401552" />
+
 **News w. TBD**:
 
 Note (2025/09/18): We got accepted by NeurIPS 2025 and it's **spotlighted**! 🎉🎉🎉 Working on release the code here.
@@ -20,16 +22,18 @@ Note (2025/09/18): We got accepted by NeurIPS 2025 and it's **spotlighted**! �
 
 ## Quick Run
 
+To train the full dataset, please refer to the [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow?tab=readme-ov-file#1-data-preparation) for raw data download and h5py files preparation.
+
 ### Training
 
-1. Prepare the demo train and val data:
+1. Prepare the **demo** train and val data for a quick run:
 ```bash
 # around 1.3G
 wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/demo-data-v2.zip
 unzip demo-data-v2.zip -d /home/kin/data/av2/h5py # to your data path
 ```
 
-2. Follow the [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow/tree/main?tab=readme-ov-file#0-installation) to setup the environment.
+2. Follow the [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow/tree/main?tab=readme-ov-file#0-installation) to setup the environment or [use docker](https://github.com/KTH-RPL/OpenSceneFlow?tab=readme-ov-file#docker-recommended-for-isolation).
 
 3. Run the training with the following command (modify the data path accordingly):
 ```bash
@@ -47,7 +51,6 @@ python eval.py checkpoint=${path_to_pretrained_weights} dataset_path=${demo_data
 Please refer to the [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow/tree/main?tab=readme-ov-file#4-visualization) for visualization instructions.
 
 While I will update a unified visualization script for OpenSceneFlow to quickly save all window views as images at the same view and same time etc. (Free us from qualitative figure making work!)
-
 
 
 ## Cite & Acknowledgements
