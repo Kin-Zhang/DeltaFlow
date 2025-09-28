@@ -366,7 +366,14 @@ class HDF5Dataset(Dataset):
 
             if self.eval_index:
                 # looks like v2 not follow the same rule as v1 with eval_mask provided
-                data_dict['eval_mask'] = np.ones_like(data_dict['pc0'][:, 0], dtype=np.bool_) if 'eval_mask' not in f[key] else f[key]['eval_mask'][:]
+                # data_dict['eval_mask'] = np.ones_like(data_dict['pc0'][:, 0], dtype=np.bool_) if 'eval_mask' not in f[key] else f[key]['eval_mask'][:]
+                if 'eval_mask' in f[key]:
+                    data_dict['eval_mask'] = f[key]['eval_mask'][:]
+                elif 'ground_mask' in f[key]:
+                    data_dict['eval_mask'] = ~f[key]['ground_mask'][:]
+                else:
+                    data_dict['eval_mask'] = np.ones_like(data_dict['pc0'][:, 0], dtype=np.bool_)
+                    
         if self.transform:
             data_dict = self.transform(data_dict)
         return data_dict

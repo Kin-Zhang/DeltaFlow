@@ -342,7 +342,7 @@ class OfficialMetrics:
             
             self.epe_ssf['Mean'][motion] = np.nanmean(avg_epes)
 
-    def print(self):
+    def print(self, ssf_metrics: bool = False):
         if not self.norm_flag:
             self.normalize()
         printed_data = []
@@ -357,8 +357,9 @@ class OfficialMetrics:
         print("Version 2 Metric on Normalized Category-based:")
         print(tabulate(printed_data, headers=["Class", "Static", "Dynamic"], tablefmt='orgtbl'), "\n")
 
-        printed_data = []
-        for key in self.epe_ssf:
-            printed_data.append([key, np.around(self.epe_ssf[key]['Static'],4), np.around(self.epe_ssf[key]['Dynamic'],4), self.epe_ssf[key]["#Static"], self.epe_ssf[key]["#Dynamic"]])
-        print("Version 3 Metric on EPE Distance-based:")
-        print(tabulate(printed_data, headers=["Distance", "Static", "Dynamic", "#Static", "#Dynamic"], tablefmt='orgtbl'), "\n")
+        if ssf_metrics:
+            printed_data = []
+            for key in self.epe_ssf:
+                printed_data.append([key, np.around(self.epe_ssf[key]['Static'],4), np.around(self.epe_ssf[key]['Dynamic'],4), self.epe_ssf[key]["#Static"], self.epe_ssf[key]["#Dynamic"]])
+            print("Version 3 Metric on EPE Distance-based:")
+            print(tabulate(printed_data, headers=["Distance", "Static", "Dynamic", "#Static", "#Dynamic"], tablefmt='orgtbl'), "\n")
