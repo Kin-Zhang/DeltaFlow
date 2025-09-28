@@ -246,7 +246,7 @@ Since in training, we save all hyper-parameters and model checkpoints, the only 
 python eval.py checkpoint=/home/kin/seflow_best.ckpt data_mode=val
 
 # (optimization-based): it might need take really long time, maybe tmux for run it.
-python eval.py model=nsfp
+python eval.py model=nsfp +master_port=12344 # change diff port if you want to have multiple runners.
 
 # it will output the av2_submit.zip or av2_submit_v2.zip for you to submit to leaderboard
 python eval.py checkpoint=/home/kin/seflow_best.ckpt data_mode=test leaderboard_version=1
