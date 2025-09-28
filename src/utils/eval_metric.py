@@ -201,8 +201,8 @@ class BucketResultMatrix:
         pass
 
 class BucketedSpeedMatrix(BucketResultMatrix):
-    def __init__(self, class_names: List[str], range_buckets: List[Tuple[float, float]]):
-        super().__init__(class_names, range_buckets)
+    def __init__(self, class_names: List[str], speed_buckets: List[Tuple[float, float]]):
+        super().__init__(class_names, speed_buckets)
 
     def get_normalized_error_matrix(self):
         error_matrix = self.epe_storage_matrix.copy()
@@ -266,7 +266,7 @@ class OfficialMetrics:
         speed_splits = np.concatenate([np.linspace(0, 2.0, 51), [np.inf]])
         self.bucketedMatrix = BucketedSpeedMatrix(
             class_names=['BACKGROUND', 'CAR', 'OTHER_VEHICLES', 'PEDESTRIAN', 'WHEELED_VRU'],
-            range_buckets=list(zip(speed_splits, speed_splits[1:]))
+            speed_buckets=list(zip(speed_splits, speed_splits[1:]))
         )
 
         distance_split = [0, 35, 50, 75, 100, np.inf]

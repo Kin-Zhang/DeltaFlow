@@ -349,12 +349,6 @@ If you find it useful, please cite our works:
     year={2025},
     journal={arXiv preprint arXiv:2503.00803},
 }
-@article{zhang2025deltaflow,
-    title={{DeltaFlow}: An Efficient Multi-frame Scene Flow Estimation Method},
-    author={Zhang, Qingwen and Zhu, Xiaomeng and Zhang, Yushan and Cai, Yixi and Andersson, Olov and Jensfelt, Patric},
-    year={2025},
-    journal={arXiv preprint arXiv:2508.17054},
-}
 ```
 
 And our excellent collaborators works contributed to this codebase also:
