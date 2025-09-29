@@ -55,7 +55,7 @@ def main(cfg):
 
     wandb_logger = WandbLogger(save_dir=output_dir,
                                entity="kth-rpl",
-                               project=f"deflow-eval", 
+                               project=f"opensf-eval", 
                                name=f"{cfg.output}",
                                offline=(cfg.wandb_mode == "offline"))
     

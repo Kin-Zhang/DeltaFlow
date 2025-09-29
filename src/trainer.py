@@ -223,7 +223,7 @@ class ModelWrapper(LightningModule):
             # wandb.log_artifact(output_file)
             return
         
-        if self.data_mode == 'val':
+        if self.data_mode in ['val', 'valid']:
             print(f"\nModel: {self.model.__class__.__name__}, Checkpoint from: {self.checkpoint}")
             print(f"More details parameters and training status are in the checkpoint file.")        
 
@@ -266,7 +266,7 @@ class ModelWrapper(LightningModule):
         else:
             final_flow[~batch['gm0']] = res_dict['flow'] + pose_flow[~batch['gm0']]
 
-        if self.data_mode == 'val': # since only val we have ground truth flow to eval
+        if self.data_mode in ['val', 'valid']: # since only val we have ground truth flow to eval
             gt_flow = batch["flow"]
             v1_dict = evaluate_leaderboard(final_flow[eval_mask], pose_flow[eval_mask], pc0[eval_mask], \
                                        gt_flow[eval_mask], batch['flow_is_valid'][eval_mask], \
@@ -306,7 +306,7 @@ class ModelWrapper(LightningModule):
         return batch, res_dict
     
     def validation_step(self, batch, batch_idx):
-        if self.data_mode in ['val', 'test']:
+        if self.data_mode in ['val', 'test', 'valid']:
             batch, res_dict = self.run_model_wo_ground_data(batch)
             self.model.timer[13].start("Eval")
             self.eval_only_step_(batch, res_dict)
