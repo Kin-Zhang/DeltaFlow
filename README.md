@@ -10,14 +10,15 @@ DeltaFlow: An Efficient Multi-frame Scene Flow Estimation Method
 
 **News w. TBD**:
 
-Note (2025/09/18): We got accepted by NeurIPS 2025 and it's **spotlighted**! 🎉🎉🎉 Working on release the code here.
+Note (2025/09/18): We got accepted by NeurIPS 2025 and it's **spotlighted**! 🎉🎉🎉 The code are ready to play, enjoy!
 
 - 2025/08/24: I'm updating some codes for early release. 
 - [x] 2025/08/24: Updating train data augmentation as illustrated in the DeltaFlow paper.
 - [x] 2025/08/25: Updating paper preprint link.
 - [x] 2025/09/05: Merged the latest commit from OpenSceneFlow codebase to DeltaFlow for afterward unified merged.
 - [x] 2025/09/25: DeltaFlow Model file, config file and loss function. Update quick training example.
-- [ ] pre-trained weights upload. Trying hard to find which one I used as tooo many ckpt files in my disk...
+- [x] 2025/09/29: Pre-trained weights for Argoverse 2, Waymo, nuScenes. _Contact me if any issue (e.g., ask for delete ckpt as privacy concern etc)._ These models are provided for research and reproducibility purposes only.
+- [ ] Public review comments for readers to refer to future improvement/directions etc. Refer discussion [here](https://github.com/Kin-Zhang/DeltaFlow/discussions/2).
 - [ ] Merged into [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow), check pull request here: https://github.com/KTH-RPL/OpenSceneFlow/pull/21
 
 ## Quick Run
@@ -41,7 +42,16 @@ python train.py model=deltaflow loss_fn=deltaflowLoss batch_size=4 num_frames=5 
 ```
 ### Evaluation
 
-I will provide the pre-trained weights soon. Then you can run the evaluation with the following command:
+Here is the pretrained weights link table for different training datasets (Note that these models are only used for research and reproducibility purposes only please follow the dataset license and privacy rules to use them):
+
+| Train Dataset | Pretrained ckpt Link |
+|:--------:|:--------------:|
+| Argoverse 2 | [huggingface](https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/deltaflow/deltaflow-av2.ckpt) |
+| Waymo Open Dataset | [huggingface](https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/deltaflow/deltaflow-waymo.ckpt) |
+| nuScenes | [huggingface](https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/deltaflow/deltaflow-nus.ckpt) |
+
+Please check the local evaluation result (raw terminal output screenshot) in [this discussion thread](https://github.com/Kin-Zhang/DeltaFlow/discussions/1#discussion-8791273). 
+You can also run the evaluation by yourself with the following command with trained weights:
 ```bash
 python eval.py checkpoint=${path_to_pretrained_weights} dataset_path=${demo_data_path}
 ```
@@ -51,7 +61,6 @@ python eval.py checkpoint=${path_to_pretrained_weights} dataset_path=${demo_data
 Please refer to the [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow/tree/main?tab=readme-ov-file#4-visualization) for visualization instructions.
 
 While I will update a unified visualization script for OpenSceneFlow to quickly save all window views as images at the same view and same time etc. (Free us from qualitative figure making work!)
-
 
 ## Cite & Acknowledgements
 ```
