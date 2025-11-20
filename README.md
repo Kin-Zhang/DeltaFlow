@@ -2,9 +2,8 @@ DeltaFlow: An Efficient Multi-frame Scene Flow Estimation Method
 ---
 
 [![arXiv](https://img.shields.io/badge/arXiv-2508.17054-b31b1b?logo=arxiv&logoColor=white)](https://arxiv.org/abs/2508.17054)
-<!-- [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/seflow-a-self-supervised-scene-flow-method-in/self-supervised-scene-flow-estimation-on-1)](https://paperswithcode.com/sota/self-supervised-scene-flow-estimation-on-1?p=seflow-a-self-supervised-scene-flow-method-in) -->
-<!-- [![poster](https://img.shields.io/badge/ECCV24|Poster-6495ed?style=flat&logo=Shotcut&logoColor=wihte)](https://hkustconnect-my.sharepoint.com/:b:/g/personal/qzhangcb_connect_ust_hk/EWyWD-tAX4xIma5U7ZQVk9cBVjsFv0Y_jAC2G7xAB-w4cg?e=c3FbMg)  -->
-<!-- [![video](https://img.shields.io/badge/video-YouTube-FF0000?logo=youtube&logoColor=white)](https://youtu.be/fQqx2IES-VI) -->
+[![poster](https://img.shields.io/badge/NeurIPS'25|Poster-6495ed?style=flat&logo=Shotcut&logoColor=wihte)](https://drive.google.com/file/d/1uh4brNIvyMsGLtoceiegJr-87K1wE_qo/view?usp=sharing)
+[![video](https://img.shields.io/badge/video-YouTube-FF0000?logo=youtube&logoColor=white)](https://youtu.be/YJ0HMZXnqxE)
 
 <img width="1864" height="756" alt="deltaflow_cover" src="https://github.com/user-attachments/assets/a7348910-8073-4703-8c0b-57c613401552" />
 
@@ -18,7 +17,7 @@ Note (2025/09/18): We got accepted by NeurIPS 2025 and it's **spotlighted**! ðŸŽ
 - [x] 2025/09/05: Merged the latest commit from OpenSceneFlow codebase to DeltaFlow for afterward unified merged.
 - [x] 2025/09/25: DeltaFlow Model file, config file and loss function. Update quick training example.
 - [x] 2025/09/29: Pre-trained weights for Argoverse 2, Waymo, nuScenes. _Contact me if any issue (e.g., ask for delete ckpt as privacy concern etc)._ These models are provided for research and reproducibility purposes only.
-- [ ] Public review comments for readers to refer to future improvement/directions etc. Refer discussion [here](https://github.com/Kin-Zhang/DeltaFlow/discussions/2).
+- [x] Public review comments for readers to refer to future improvement/directions etc. Refer discussion [here](https://github.com/Kin-Zhang/DeltaFlow/discussions/2).
 - [ ] Merged into [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow), check pull request here: https://github.com/KTH-RPL/OpenSceneFlow/pull/21
 
 ## Quick Run
@@ -64,11 +63,12 @@ While I will update a unified visualization script for OpenSceneFlow to quickly 
 
 ## Cite & Acknowledgements
 ```
-@article{zhang2025deltaflow,
-    title={{DeltaFlow}: An Efficient Multi-frame Scene Flow Estimation Method},
-    author={Zhang, Qingwen and Zhu, Xiaomeng and Zhang, Yushan and Cai, Yixi and Andersson, Olov and Jensfelt, Patric},
-    year={2025},
-    journal={arXiv preprint arXiv:2508.17054},
+@inproceedings{zhang2025deltaflow,
+title={{DeltaFlow}: An Efficient Multi-frame Scene Flow Estimation Method},
+author={Zhang, Qingwen and Zhu, Xiaomeng and Zhang, Yushan and Cai, Yixi and Andersson, Olov and Jensfelt, Patric},
+booktitle={The Thirty-ninth Annual Conference on Neural Information Processing Systems},
+year={2025},
+url={https://openreview.net/forum?id=T9qNDtvAJX}
 }
 ```
 This work was partially supported by the Wallenberg AI, Autonomous Systems and Software Program (WASP) funded by the Knut and Alice Wallenberg Foundation and Prosense (2020-02963) funded by Vinnova. 
