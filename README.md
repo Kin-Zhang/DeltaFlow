@@ -103,11 +103,11 @@ If you prefer to build the Docker image by yourself, Check [build-docker-image](
 
 ## 1. Data Preparation
 
-Refer to [dataprocess/README.md](dataprocess/README.md) for dataset download instructions. Currently, we support **Argoverse 2**, **Waymo**, **nuScenes**, [**MAN-TruckScene**](https://github.com/TUMFTM/truckscenes-devkit), [**ZOD**](https://github.com/zenseact/zod) and **custom datasets** (more datasets will be added in the future). 
+Refer to [dataprocess/README.md](dataprocess/README.md) for dataset download instructions. Currently, we support [**Argoverse 2**](https://www.argoverse.org/av2.html), [**Waymo**](https://waymo.com/open/), [**nuScenes**](https://www.nuscenes.org/), [**MAN-TruckScene**](https://github.com/TUMFTM/truckscenes-devkit), [**ZOD**](https://github.com/zenseact/zod) and **custom datasets** (more datasets will be added in the future). 
 
 After downloading, convert the raw data to `.h5` format for easy training, evaluation, and visualization. Follow the steps in [dataprocess/README.md#process](dataprocess/README.md#process). 
 
-For a quick start, use our **mini processed dataset**, which includes one scene in `train` and `val`. It is pre-converted to `.h5` format with label data ([HuggingFace](https://huggingface.co/kin-zhang/OpenSceneFlow/blob/main/demo_data.zip)/[Zenodo](https://zenodo.org/records/13744999/files/demo_data.zip)).
+For a quick start, use our **mini processed dataset**, which includes one scene in `train` and `val`. It is pre-converted to `.h5` format with label data ([HuggingFace](https://huggingface.co/kin-zhang/OpenSceneFlow/blob/main/demo_data.zip)).
 
 
 ```bash
@@ -125,7 +125,7 @@ Some tips before running the code:
 * If you want to use [wandb](wandb.ai), replace all `entity="kth-rpl",` to your own entity otherwise tensorboard will be used locally.
 * Set correct data path by passing the config, e.g. `train_data=/home/kin/data/av2/h5py/demo/train val_data=/home/kin/data/av2/h5py/demo/val`.
 
-And free yourself from trainning, you can download the pretrained weight from [HuggingFace](https://huggingface.co/kin-zhang/OpenSceneFlow) and we provided the detail `wget` command in each model section. For optimization-based method, it's train-free so you can directly run with [3. Evaluation](#3-evaluation) (check more in the evaluation section).
+And free yourself from trainning, you can download the pretrained weight from [**HuggingFace - OpenSceneFlow**](https://huggingface.co/kin-zhang/OpenSceneFlow) and we provided the detail `wget` command in each model section. For optimization-based method, it's train-free so you can directly run with [3. Evaluation](#3-evaluation) (check more in the evaluation section).
 
 ```bash
 conda activate opensf
@@ -141,8 +141,8 @@ Train DeltaFlow with the leaderboard submit config. [Runtime: Around 18 hours in
 # total bz then it's 10x2 under above training setup.
 python train.py model=deltaFlow optimizer.lr=2e-3 epochs=20 batch_size=2 num_frames=5 loss_fn=deflowLoss "voxel_size=[0.15, 0.15, 0.15]" "point_cloud_range=[-38.4, -38.4, -3.2, 38.4, 38.4, 3.2]" +optimizer.scheduler.name=WarmupCosLR +optimizer.scheduler.max_lr=2e-3 +optimizer.scheduler.total_steps=20000
 
-# Pretrained weight can be downloaded through:
-wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/flow4d_best.ckpt
+# Pretrained weight can be downloaded through (av2), check all other datasets in the same folder.
+wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/deltaflow/deltaflow-av2.ckpt
 ```
 
 #### Flow4D
@@ -359,16 +359,21 @@ If you find it useful, please cite our works:
   doi={10.1109/ICRA57147.2024.10610278}
 }
 @article{zhang2025himo,
-    title={HiMo: High-Speed Objects Motion Compensation in Point Clouds},
-    author={Zhang, Qingwen and Khoche, Ajinkya and Yang, Yi and Ling, Li and Sina, Sharif Mansouri and Andersson, Olov and Jensfelt, Patric},
-    year={2025},
-    journal={arXiv preprint arXiv:2503.00803},
+  title={{HiMo}: High-Speed Objects Motion Compensation in Point Cloud},
+  author={Zhang, Qingwen and Khoche, Ajinkya and Yang, Yi and Ling, Li and Mansouri, Sina Sharif and Andersson, Olov and Jensfelt, Patric},
+  journal={IEEE Transactions on Robotics}, 
+  year={2025},
+  volume={41},
+  number={},
+  pages={5896-5911},
+  doi={10.1109/TRO.2025.3619042}
 }
-@article{zhang2025deltaflow,
-    title={{DeltaFlow}: An Efficient Multi-frame Scene Flow Estimation Method},
-    author={Zhang, Qingwen and Zhu, Xiaomeng and Zhang, Yushan and Cai, Yixi and Andersson, Olov and Jensfelt, Patric},
-    year={2025},
-    journal={arXiv preprint arXiv:2508.17054},
+@inproceedings{zhang2025deltaflow,
+  title={{DeltaFlow}: An Efficient Multi-frame Scene Flow Estimation Method},
+  author={Zhang, Qingwen and Zhu, Xiaomeng and Zhang, Yushan and Cai, Yixi and Andersson, Olov and Jensfelt, Patric},
+  booktitle={The Thirty-ninth Annual Conference on Neural Information Processing Systems},
+  year={2025},
+  url={https://openreview.net/forum?id=T9qNDtvAJX}
 }
 ```
 
