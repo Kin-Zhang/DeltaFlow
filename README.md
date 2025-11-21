@@ -371,7 +371,6 @@ If you find it useful, please cite our works:
   journal={IEEE Transactions on Robotics}, 
   year={2025},
   volume={41},
-  number={},
   pages={5896-5911},
   doi={10.1109/TRO.2025.3619042}
 }
@@ -403,13 +402,14 @@ And our excellent collaborators works contributed to this codebase also:
   pages={3462-3469},
   doi={10.1109/LRA.2025.3542327}
 }
-@article{khoche2025ssf,
-  title={SSF: Sparse Long-Range Scene Flow for Autonomous Driving},
+@inproceedings{khoche2025ssf,
+  title={{SSF}: Sparse Long-Range Scene Flow for Autonomous Driving},
   author={Khoche, Ajinkya and Zhang, Qingwen and Sanchez, Laura Pereira and Asefaw, Aron and Mansouri, Sina Sharif and Jensfelt, Patric},
-  journal={arXiv preprint arXiv:2501.17821},
-  year={2025}
+  booktitle={2025 IEEE International Conference on Robotics and Automation (ICRA)}, 
+  year={2025},
+  pages={6394-6400},
+  doi={10.1109/ICRA55743.2025.11128770}
 }
-
 @inproceedings{lin2025voteflow,
   title={VoteFlow: Enforcing Local Rigidity in Self-Supervised Scene Flow},
   author={Lin, Yancong and Wang, Shiming and Nan, Liangliang and Kooij, Julian and Caesar, Holger},
