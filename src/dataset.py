@@ -23,6 +23,7 @@ from torch.utils.data import Dataset, DataLoader
 import h5py, pickle, argparse
 from tqdm import tqdm
 import numpy as np
+from torchvision import transforms
 
 import os, sys
 BASE_DIR = os.path.abspath(os.path.join( os.path.dirname( __file__ ), '..' ))
@@ -185,8 +186,8 @@ class ToTensor(object):
 class HDF5Dataset(Dataset):
     def __init__(self, directory, \
                 transform=None, n_frames=2, ssl_label=None, \
-                eval = False, eval_input_seq = False, leaderboard_version=1, \
-                vis_name='', flow_num=1):
+                eval = False, leaderboard_version=1, \
+                vis_name=''):
         '''
         Args:
             directory: the directory of the dataset, the folder should contain some .h5 file and index_total.pkl.
@@ -196,10 +197,8 @@ class HDF5Dataset(Dataset):
             * n_frames: the number of frames we use, default is 2: current (pc0), next (pc1); if it's more than 2, then it read the history from current.
             * ssl_label: if attr, it will read the dynamic cluster label. Otherwise, no dynamic cluster label in data dict.
             * eval: if True, use the eval index (only used it for leaderboard evaluation)
-            * eval_input_seq: I forgot what it is.... xox...
             * leaderboard_version: 1st or 2nd, default is 1. If '2', we will use the index_eval_v2.pkl from assets/docs.
             * vis_name: the data of the visualization, default is ''.
-            * flow_num: the number of future frames we read, default is 1. (pc0->pc1 flow)
         '''
         super(HDF5Dataset, self).__init__()
         self.directory = directory
@@ -209,12 +208,10 @@ class HDF5Dataset(Dataset):
             self.data_index = pickle.load(f)
 
         self.eval_index = False
-        self.eval_input_seq = eval_input_seq
         self.ssl_label = import_func(f"src.autolabel.{ssl_label}") if ssl_label is not None else None
         self.history_frames = n_frames - 2
         self.vis_name = vis_name if isinstance(vis_name, list) else [vis_name]
         self.transform = transform
-        self.flow_num = flow_num
 
         if eval:
             eval_index_file = os.path.join(self.directory, 'index_eval.pkl')
@@ -267,7 +264,7 @@ class HDF5Dataset(Dataset):
                 
     def __len__(self):
         # return 100 # for testing
-        if self.eval_index and not self.eval_input_seq:
+        if self.eval_index:
             return len(self.eval_data_index)
         elif not self.eval_index and self.train_index is not None:
             return len(self.train_index)
@@ -278,7 +275,7 @@ class HDF5Dataset(Dataset):
         Check if the index is valid for the current mode and satisfy the constraints.
         """
         eval_flag = False
-        if self.eval_index and not self.eval_input_seq:
+        if self.eval_index:
             eval_index_ = index_
             scene_id, timestamp = self.eval_data_index[eval_index_]
             index_ = self.data_index.index([scene_id, timestamp])
@@ -286,17 +283,9 @@ class HDF5Dataset(Dataset):
             if index_ >= max_idx:
                 _, index_ = self.valid_index(eval_index_ - 1)
             eval_flag = True
-        elif self.eval_index and self.eval_input_seq:
-            scene_id, timestamp = self.data_index[index_]
-            # to make sure we have continuous frames
-            if self.scene_id_bounds[scene_id]["max_index"] <= index_:
-                index_ = index_ - 1
-            scene_id, timestamp = self.data_index[index_]
-            eval_flag = True if [scene_id, timestamp] in self.eval_data_index else False
         elif self.train_index is not None:
             train_index_ = index_
             scene_id, timestamp = self.train_index[train_index_]
-            # FIXME: it works now, but self.flow_num is not possible in this case.
             max_idx = self.scene_id_bounds[scene_id]["max_index"]
             index_ = self.data_index.index([scene_id, timestamp])
             if index_ >= max_idx:
@@ -306,7 +295,7 @@ class HDF5Dataset(Dataset):
             max_idx = self.scene_id_bounds[scene_id]["max_index"]
             min_idx = self.scene_id_bounds[scene_id]["min_index"]
 
-            max_valid_index_for_flow = max_idx - self.flow_num
+            max_valid_index_for_flow = max_idx - 1
             min_valid_index_for_flow = min_idx + self.history_frames
             index_ = max(min_valid_index_for_flow, min(max_valid_index_for_flow, index_))
         return eval_flag, index_
