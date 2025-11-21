@@ -198,7 +198,7 @@ wget https://huggingface.co/kin-zhang/OpenSceneFlow/resolve/main/deflow_best.ckp
 ### Feed-Forward Self-Supervised Model Training
 
 Train Feed-forward SSL methods (e.g. SeFlow/SeFlow++/VoteFlow etc), we needed to:
-1) process auto-label process.
+1) process auto-label process for training. Check [dataprocess/README.md#self-supervised-process](dataprocess/README.md#self-supervised-process) for more details. We provide these inside the demo dataset already.
 2) specify the loss function, we set the config here for our best model in the leaderboard.
 
 #### SeFlow
@@ -257,7 +257,8 @@ python save.py model=fastnsf
 
 ## 3. Evaluation
 
-You can view Wandb dashboard for the training and evaluation results or upload result to online leaderboard.
+You can view Wandb dashboard for the training and evaluation results or upload result to online leaderboard. 
+<!-- Three-way EPE and Dynamic Bucket-normalized are evaluated within a 70x70m range (followed Argoverse 2 online leaderboard). No ground points are considered in the evaluation. -->
 
 Since in training, we save all hyper-parameters and model checkpoints, the only thing you need to do is to specify the checkpoint path. Remember to set the data path correctly also.
 
