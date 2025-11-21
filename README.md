@@ -11,6 +11,11 @@
 OpenSceneFlow is a codebase for point cloud scene flow estimation. 
 It is also an official implementation of the following papers (sorted by the time of publication):
 
+<!-- - **TeFlow: An Efficient Multi-frame Scene Flow Estimation Method**   
+*Qingwen Zhang, Chenhan Jiang, Xiaomeng Zhu, Yunqi Miao, Yushan Zhang, Olov Andersson, Patric Jensfelt*  
+Under Review   
+[ Strategy ] [ Self-Supervised ] - [ [OpenReview](https://openreview.net/forum?id=h70FLgnIAw) ] [ [Project](https://github.com/Kin-Zhang/TeFlow) ]&rarr; [here](#teflow) -->
+
 - **DeltaFlow: An Efficient Multi-frame Scene Flow Estimation Method**   
 *Qingwen Zhang, Xiaomeng Zhu, Yushan Zhang, Yixi Cai, Olov Andersson, Patric Jensfelt*  
 Conference on Neural Information Processing Systems (**NeurIPS**) 2025 - Spotlight   
@@ -338,6 +343,7 @@ https://github.com/user-attachments/assets/07e8d430-a867-42b7-900a-11755949de21
 ## Cite Us
 
 [*OpenSceneFlow*](https://github.com/KTH-RPL/OpenSceneFlow) is originally designed by [Qingwen Zhang](https://kin-zhang.github.io/) from DeFlow and SeFlow. 
+It is actively maintained and developed by the community (ref. below works).
 If you find it useful, please cite our works:
 
 ```bibtex
@@ -374,6 +380,12 @@ If you find it useful, please cite our works:
   booktitle={The Thirty-ninth Annual Conference on Neural Information Processing Systems},
   year={2025},
   url={https://openreview.net/forum?id=T9qNDtvAJX}
+}
+@misc{zhang2025teflow,
+  title={{TeFlow}: Enabling Multi-frame Supervision for Feed-forward Scene Flow Estimation},
+  author={Zhang, Qingwen and Jiang, Chenhan and Zhu, Xiaomeng and Miao, Yunqi and Zhang, Yushan and Andersson, Olov and Jensfelt, Patric},
+  year={2025},
+  url={https://openreview.net/forum?id=h70FLgnIAw}
 }
 ```
 
