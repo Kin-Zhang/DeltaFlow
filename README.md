@@ -18,7 +18,7 @@ Note (2025/09/18): We got accepted by NeurIPS 2025 and it's **spotlighted**! ðŸŽ
 - [x] 2025/09/25: DeltaFlow Model file, config file and loss function. Update quick training example.
 - [x] 2025/09/29: Pre-trained weights for Argoverse 2, Waymo, nuScenes. _Contact me if any issue (e.g., ask for delete ckpt as privacy concern etc)._ These models are provided for research and reproducibility purposes only.
 - [x] Public review comments for readers to refer to future improvement/directions etc. Refer discussion [here](https://github.com/Kin-Zhang/DeltaFlow/discussions/2).
-- [ ] Merged into [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow), check pull request here: https://github.com/KTH-RPL/OpenSceneFlow/pull/21
+- [x] Merged into [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow), check pull request here: https://github.com/KTH-RPL/OpenSceneFlow/pull/21
 
 ## Quick Run
 
@@ -37,7 +37,7 @@ unzip demo-data-v2.zip -d /home/kin/data/av2/h5py # to your data path
 
 3. Run the training with the following command (modify the data path accordingly):
 ```bash
-python train.py model=deltaflow loss_fn=deltaflowLoss batch_size=4 num_frames=5 voxel_size="[0.15,0.15,0.15]" point_cloud_range="[-38.4,-38.4,-3,38.4,38.4,3]" optimizer.lr=2e-4 train_data=${demo_train_data_path} val_data=${demo_val_data_path}
+python train.py model=deltaflow loss_fn=deltaflowLoss batch_size=4 num_frames=5 train_aug=True voxel_size="[0.15,0.15,0.15]" point_cloud_range="[-38.4,-38.4,-3,38.4,38.4,3]" optimizer.lr=2e-4 train_data=${demo_train_data_path} val_data=${demo_val_data_path}
 ```
 ### Evaluation
 
