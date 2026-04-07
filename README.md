@@ -2,12 +2,15 @@ DeltaFlow: An Efficient Multi-frame Scene Flow Estimation Method
 ---
 
 [![arXiv](https://img.shields.io/badge/arXiv-2508.17054-b31b1b?logo=arxiv&logoColor=white)](https://arxiv.org/abs/2508.17054)
-[![poster](https://img.shields.io/badge/NeurIPS'25|Poster-6495ed?style=flat&logo=Shotcut&logoColor=wihte)](https://drive.google.com/file/d/1uh4brNIvyMsGLtoceiegJr-87K1wE_qo/view?usp=sharing)
+[![pdfreview](https://img.shields.io/badge/OpenReview-PDF-blue)](https://github.com/Kin-Zhang/DeltaFlow/discussions/1)
 [![video](https://img.shields.io/badge/video-YouTube-FF0000?logo=youtube&logoColor=white)](https://youtu.be/YJ0HMZXnqxE)
+[![poster](https://img.shields.io/badge/NeurIPS'25|Poster-6495ed?style=flat&logo=Shotcut&logoColor=wihte)](https://drive.google.com/file/d/1uh4brNIvyMsGLtoceiegJr-87K1wE_qo/view?usp=sharing)
+
+TL;DR: We tackle a key challenge in 3D scene flow: leveraging more **temporal** data traditionally leads to an exploding computational cost. Our ΔFlow efficiently captures temporal motion cues, keeping the computational cost minimal: **regardless of the number of frames**. 🚀
 
 <img width="1864" height="756" alt="deltaflow_cover" src="https://github.com/user-attachments/assets/a7348910-8073-4703-8c0b-57c613401552" />
 
-**News w. TBD**:
+<!-- **News w. TBD**:
 
 Note (2025/09/18): We got accepted by NeurIPS 2025 and it's **spotlighted**! 🎉🎉🎉 The code are ready to play, enjoy!
 
@@ -18,11 +21,18 @@ Note (2025/09/18): We got accepted by NeurIPS 2025 and it's **spotlighted**! �
 - [x] 2025/09/25: DeltaFlow Model file, config file and loss function. Update quick training example.
 - [x] 2025/09/29: Pre-trained weights for Argoverse 2, Waymo, nuScenes. _Contact me if any issue (e.g., ask for delete ckpt as privacy concern etc)._ These models are provided for research and reproducibility purposes only.
 - [x] Public review comments for readers to refer to future improvement/directions etc. Refer discussion [here](https://github.com/Kin-Zhang/DeltaFlow/discussions/2).
-- [x] Merged into [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow), check pull request here: https://github.com/KTH-RPL/OpenSceneFlow/pull/21
+- [x] Merged into [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow), check pull request here: https://github.com/KTH-RPL/OpenSceneFlow/pull/21 -->
+
+
+To easy understand the core method, I copy the core file: [sparse_encoder.py](./sparse_encoder.py#67) and [unet.py](./unet.py). Feel free to have a quick look at the function to understand the core method. 
+The old source code branch is also [available here](https://github.com/Kin-Zhang/DeltaFlow/tree/source).
+
+<!-- <img width="1349" height="761" alt="image" src="https://github.com/user-attachments/assets/ab678037-9de4-44d6-a092-056bbc0fea74" /> -->
 
 ## Quick Run
 
 To train the full dataset, please refer to the [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow?tab=readme-ov-file#1-data-preparation) for raw data download and h5py files preparation.
+
 
 ### Training
 
@@ -57,9 +67,11 @@ python eval.py checkpoint=${path_to_pretrained_weights} dataset_path=${demo_data
 
 ### Visualization
 
-Please refer to the [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow/tree/main?tab=readme-ov-file#4-visualization) for visualization instructions.
+<img width="1163" height="662" alt="image" src="https://github.com/user-attachments/assets/94aac66d-fe68-4445-94c4-1d014eabfa07" />
 
-While I will update a unified visualization script for OpenSceneFlow to quickly save all window views as images at the same view and same time etc. (Free us from qualitative figure making work!)
+To make your own visualizations, please refer to the [OpenSceneFlow](https://github.com/KTH-RPL/OpenSceneFlow/tree/main?tab=readme-ov-file#4-visualization) for visualization instructions.
+
+<!-- While I will update a unified visualization script for OpenSceneFlow to quickly save all window views as images at the same view and same time etc. (Free us from qualitative figure making work!) -->
 
 ## Cite & Acknowledgements
 ```
