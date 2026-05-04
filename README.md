@@ -2,7 +2,7 @@ DeltaFlow: An Efficient Multi-frame Scene Flow Estimation Method
 ---
 
 [![arXiv](https://img.shields.io/badge/arXiv-2508.17054-b31b1b?logo=arxiv&logoColor=white)](https://arxiv.org/abs/2508.17054)
-[![pdfreview](https://img.shields.io/badge/OpenReview-PDF-blue)](https://github.com/Kin-Zhang/DeltaFlow/discussions/1)
+[![pdfreview](https://img.shields.io/badge/OpenReview-PDF-blue)](https://github.com/Kin-Zhang/DeltaFlow/discussions/2)
 [![video](https://img.shields.io/badge/video-YouTube-FF0000?logo=youtube&logoColor=white)](https://youtu.be/YJ0HMZXnqxE)
 [![poster](https://img.shields.io/badge/NeurIPS'25|Poster-6495ed?style=flat&logo=Shotcut&logoColor=wihte)](https://drive.google.com/file/d/1uh4brNIvyMsGLtoceiegJr-87K1wE_qo/view?usp=sharing)
 
